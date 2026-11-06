@@ -1,11 +1,12 @@
 {
-  "name": "xHamster Deutsch",
+  "name": "xhamster-nuvio",
   "version": "1.0.0",
   "scrapers": [
     {
       "id": "xhamster",
-      "name": "xHamster Deutsch",
+      "name": "xHamster",
       "filename": "providers/xhamster.js",
+      "version": "1.0.0",
       "supportedTypes": ["movie"],
       "enabled": true
     }
