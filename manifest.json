@@ -1,0 +1,13 @@
+{
+  "name": "xHamster Deutsch",
+  "version": "1.0.0",
+  "scrapers": [
+    {
+      "id": "xhamster",
+      "name": "xHamster Deutsch",
+      "filename": "providers/xhamster.js",
+      "supportedTypes": ["movie"],
+      "enabled": true
+    }
+  ]
+}
