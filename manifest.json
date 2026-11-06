@@ -1,14 +1,20 @@
 {
-  "name": "xhamster-nuvio",
+  "name": "xHamster Deutsch",
   "version": "1.0.0",
   "scrapers": [
     {
       "id": "xhamster",
-      "name": "xHamster",
-      "filename": "providers/xhamster.js",
+      "name": "xHamster Deutsch",
+      "description": "Deutsche xHamster-Videos",
       "version": "1.0.0",
+      "author": "cufi12",
       "supportedTypes": ["movie"],
-      "enabled": true
+      "filename": "providers/xhamster.js",
+      "enabled": true,
+      "formats": ["mp4", "hls", "m3u8"],
+      "contentLanguage": ["de"],
+      "limited": false,
+      "disabledPlatforms": []
     }
   ]
 }
