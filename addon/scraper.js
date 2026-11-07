@@ -296,30 +296,85 @@ async function epornerMetadata(id) {
 async function epornerStreams(id) {
   const videoId = epIdFromId(id);
   if (!videoId) return [];
-  const params = new URLSearchParams({ id: videoId, per_page: "1", thumbsize: "big", format: "json" });
-  const response = await fetch(EP_API + "?" + params.toString(), { headers: { Accept: "application/json" } });
-  if (!response.ok) return [];
-  const data = await response.json();
-  const video = (Array.isArray(data.videos) ? data.videos : [])[0];
+
+  // Use Eporner's documented single-video endpoint first. The search
+  // endpoint remains a compatibility fallback for older API responses.
+  const detailParams = new URLSearchParams({ id: videoId, thumbsize: "big", format: "json" });
+  const searchParams = new URLSearchParams({ id: videoId, per_page: "1", thumbsize: "big", format: "json" });
+  const requestJson = async url => {
+    const response = await fetch(url, {
+      headers: { Accept: "application/json", "User-Agent": "Mozilla/5.0" }
+    });
+    if (!response.ok) return null;
+    return response.json();
+  };
+  let data = await requestJson(EP_BASE + "/api/v2/video/id/?" + detailParams.toString());
+  let video = data?.video || (Array.isArray(data?.videos) ? data.videos[0] : null) ||
+    (data && data.id ? data : null);
+  if (!video) {
+    data = await requestJson(EP_API + "?" + searchParams.toString());
+    video = (Array.isArray(data?.videos) ? data.videos[0] : null) ||
+      (Array.isArray(data) ? data[0] : null);
+  }
   if (!video) return [];
-  const urls = [];
-  if (video.default_quality?.url) urls.push(video.default_quality.url);
+
+  const candidates = [];
+  const add = (value, quality) => {
+    if (value && typeof value === "object") {
+      quality = value.quality || value.label || quality;
+      value = value.url || value.src || value.file;
+    }
+    if (typeof value !== "string") return;
+    const url = decode(value).trim();
+    // Only accept HTTPS media files from Eporner's own delivery domains.
+    if (!/^https:\/\//i.test(url) || !/\.(?:mp4|m3u8)(?:$|[?#])/i.test(url)) return;
+    let host = "";
+    try { host = new URL(url).hostname.toLowerCase(); } catch (_) { return; }
+    if (!(host === "eporner.com" || host.endsWith(".eporner.com"))) return;
+    candidates.push({ url, quality: String(quality || "") });
+  };
+
+  const defaultQuality = video.default_quality;
+  add(defaultQuality, defaultQuality && typeof defaultQuality === "object" ? defaultQuality.quality : "");
   if (video.all_qualities && typeof video.all_qualities === "object") {
-    for (const value of Object.values(video.all_qualities)) if (typeof value === "string") urls.push(value);
+    for (const [quality, value] of Object.entries(video.all_qualities)) add(value, quality);
   }
-  const direct = unique(urls.filter(url => /^https:\/\//i.test(url) && /\.(?:mp4|m3u8)(?:$|[?#])/i.test(url)))
-    .slice(0, 5);
-  if (direct.length) {
-    return direct.map(url => ({
-      name: "CVN Eporner",
-      title: video.title || "Eporner",
-      url,
-      ...( /\.m3u8(?:$|[?#])/i.test(url) ? { behaviorHints: { notWebReady: true } } : {})
-    }));
+  if (Array.isArray(video.sources)) {
+    for (const source of video.sources) add(source);
   }
-  // No direct media URL means no native-player stream. Never send Nuvio
-  // to the provider website as a fallback.
-  return [];
+  if (Array.isArray(video.qualities)) {
+    for (const source of video.qualities) add(source);
+  }
+
+  const uniqueCandidates = [];
+  const seen = new Set();
+  for (const candidate of candidates) {
+    if (seen.has(candidate.url)) continue;
+    seen.add(candidate.url);
+    uniqueCandidates.push(candidate);
+  }
+  // Prefer the highest known quality, while retaining a few fallbacks.
+  uniqueCandidates.sort((a, b) => {
+    const qa = Number((a.quality.match(/\d+/) || [0])[0]);
+    const qb = Number((b.quality.match(/\d+/) || [0])[0]);
+    return qb - qa;
+  });
+  const title = String(video.title || "Eporner");
+  return uniqueCandidates.slice(0, 5).map(candidate => ({
+    name: "CVN Eporner",
+    title: title + (candidate.quality ? " · " + candidate.quality : ""),
+    url: candidate.url,
+    behaviorHints: {
+      notWebReady: true,
+      filename: title.replace(/[\\/:*?"<>|]+/g, " ").trim() + (candidate.url.includes(".m3u8") ? ".m3u8" : ".mp4"),
+      proxyHeaders: {
+        request: {
+          Referer: EP_BASE + "/",
+          Origin: EP_BASE
+        }
+      }
+    }
+  }));
 }
 
 const CATALOG_SEARCHES = {
