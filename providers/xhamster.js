@@ -168,20 +168,44 @@ function pageTitle(html) {
     : "";
 }
 
-function titleMatches(targetTitle, candidateTitle) {
-  var stopWords = { "the": true, "in": true, "a": true, "an": true, "of": true, "and": true };
-  var tokens = String(targetTitle || "").toLowerCase()
+function normalizeTitle(value) {
+  return String(value || "")
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[\\u0300-\\u036f]/g, "")
+    .replace(/ß/g, "ss")
     .replace(/[^a-z0-9]+/g, " ")
-    .split(/\s+/)
-    .filter(function (word) { return word.length > 2 && !stopWords[word]; });
-  var candidate = " " + String(candidateTitle || "").toLowerCase()
-    .replace(/[^a-z0-9]+/g, " ").replace(/\s+/g, " ").trim() + " ";
+    .replace(/\\s+/g, " ")
+    .trim();
+}
 
-  if (!tokens.length) return false;
+function titleMatches(targetTitle, candidateTitle) {
+  var stopWords = {
+    "the": true, "in": true, "a": true, "an": true, "of": true,
+    "and": true, "der": true, "die": true, "das": true, "ein": true,
+    "eine": true, "und": true, "im": true, "am": true
+  };
+  var normalizedTarget = normalizeTitle(targetTitle);
+  var normalizedCandidate = normalizeTitle(candidateTitle);
+  var tokens = normalizedTarget.split(" ").filter(function (word) {
+    return word.length > 2 && !stopWords[word];
+  });
+  var candidateTokens = normalizedCandidate.split(" ").filter(Boolean);
+
+  if (!tokens.length || !candidateTokens.length) return false;
+  if (normalizedCandidate === normalizedTarget) return true;
+
+  var candidateSet = {};
+  candidateTokens.forEach(function (word) { candidateSet[word] = true; });
   var matches = tokens.filter(function (word) {
-    return candidate.indexOf(" " + word + " ") !== -1;
+    return candidateSet[word] === true;
   }).length;
-  return matches >= Math.min(2, tokens.length);
+
+  // Require meaningful overlap instead of accepting any two shared words
+  // from a long title. This reduces unrelated results with generic terms.
+  var coverage = matches / tokens.length;
+  var requiredMatches = Math.min(2, tokens.length);
+  return matches >= requiredMatches && coverage >= 0.5;
 }
 
 function fetchSearchPages(query) {
