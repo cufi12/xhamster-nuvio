@@ -3,7 +3,7 @@
 // media URLs. It does not bypass login, age checks, CAPTCHAs, DRM, or anti-bot protections.
 
 const TMDB_API_KEY = "4ef0d7355d9ffb5151e987764708ce96";
-const SEARCH_BASE = "https://xhamster.com/search/";
+const SEARCH_BASE = "https://ge.xhamster.com/search/";
 
 function decodeHtml(value) {
   return String(value || "")
@@ -85,7 +85,7 @@ function metadataFromImdbId(imdbId) {
   }).catch(function () {
     // IMDb fallback: read only public title metadata; do not bypass any access gate.
     return fetch("https://www.imdb.com/title/" + encodeURIComponent(imdbId) + "/", {
-      headers: { Accept: "text/html,application/xhtml+xml" }
+      headers: { Accept: "text/html,application/xhtml+xml", "Accept-Language": "de-DE,de;q=0.9,en;q=0.5" }
     }).then(function (response) {
       if (!response.ok) throw new Error("IMDb metadata unavailable: " + response.status);
       return response.text();
@@ -115,7 +115,7 @@ function findVideoPages(html) {
   var match;
 
   while ((match = pattern.exec(html)) !== null) {
-    var url = absoluteUrl(match[1], "https://xhamster.com/");
+    var url = absoluteUrl(match[1], "https://ge.xhamster.com/");
     if (isXHamsterVideoPage(url)) {
       links.push(url.split("#")[0].split("?")[0]);
     }
@@ -232,7 +232,7 @@ function getStreams(tmdbId, mediaType) {
 
       // Known alternate xHamster title supplied by the user for this film.
       var normalizedTitle = String(metadata.title || "").toLowerCase()
-        .replace(/[^a-z0-9]+/g, " ").replace(/\\s+/g, " ").trim();
+        .replace(/[^a-z0-9]+/g, " ").replace(/\s+/g, " ").trim();
       var knownPages = [];
       if (normalizedTitle === "barbi in the imperfect world") {
         titles.push("Barbys Erotic World");
