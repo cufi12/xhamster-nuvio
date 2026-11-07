@@ -378,7 +378,7 @@ async function epornerStreams(id) {
     const embedHtml = await getHtml(EP_BASE + "/embed/" + encodeURIComponent(videoId));
     if (embedHtml) {
       const visibleHtml = decode(embedHtml);
-      const mediaPattern = /https:\/\/[^"'\\s<>]+?\.(?:mp4|m3u8)(?:\?[^"'\\s<>]*)?/gi;
+      const mediaPattern = /https:\/\/[^"'\s<>]+?\.(?:mp4|m3u8)(?:\?[^"'\s<>]*)?/gi;
       let mediaMatch;
       while ((mediaMatch = mediaPattern.exec(visibleHtml)) !== null) {
         add(mediaMatch[0], "");
