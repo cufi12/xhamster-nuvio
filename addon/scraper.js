@@ -102,7 +102,7 @@ const CATALOG_SEARCHES = {
   xh_german_studio: "German",
   xh_hentai_german_dub: "Hentai German Dub",
   xh_mario_salieri_german_dub: "Mario Salieri German Dub",
-  xh_german_all: "German"
+  xh_german_all: "German Dub"
 };
 async function catalog(args) {
   const search = String(args.extra?.search || CATALOG_SEARCHES[args.id] || "").trim();
