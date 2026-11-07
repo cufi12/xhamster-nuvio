@@ -16,6 +16,13 @@ Die fünf deutschen Kataloge führen Suchtreffer aus den derzeit integrierten Qu
 
 Ein sichtbarer Katalogeintrag bedeutet nicht automatisch, dass die Quelle in Nuvios integriertem Player abspielbar ist. Die deutsche Textübersetzung ist außerdem kein Nachweis einer deutschen Tonspur.
 
+## ID- und Stream-Regeln
+
+- Jeder Film erhält eine deterministische ID aus seiner kanonischen öffentlichen Videoseiten-URL (`xh:` + Base64URL). Änderungen an Titel, Poster oder Beschreibung ändern die ID nicht.
+- Metadaten und Stream-Abfragen verwenden dieselbe ID. Nach einem Serverneustart wird der Datensatz bei Bedarf über die exakte Videoseiten-URL beim Actor erneut gesucht.
+- Stream-Kandidaten aus Actor-Daten werden nicht ungeprüft ausgegeben. Jede URL muss über einen begrenzten HTTP-HEAD- bzw. Range-GET-Test erreichbar sein und einen Video-, HLS- oder DASH-Medientyp liefern. Andernfalls bleibt `streams` leer.
+- Der Stream-Test folgt HTTP-Weiterleitungen, akzeptiert nur HTTP(S) und prüft höchstens vier Kandidaten pro Video. Ein Katalogeintrag allein ist kein Wiedergabenachweis.
+
 ## Lokal starten
 
 Voraussetzung: Node.js 20 oder neuer.
