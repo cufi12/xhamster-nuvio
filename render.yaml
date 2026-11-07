@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: cvn-xhamster-catalog
+    runtime: node
+    plan: free
+    rootDir: addon
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /manifest.json
+    autoDeploy: true
