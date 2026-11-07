@@ -151,14 +151,10 @@ function extractMedia(html, pageUrl) {
     }
   });
 
-  // Prefer HLS exclusively whenever a playlist is exposed. Return MP4
-  // only when the page does not expose any HLS playlist.
-  var uniqueCandidates = unique(candidates);
-  var hlsCandidates = uniqueCandidates.filter(function (url) {
+  // Prefer HLS playlists exclusively. MP4 is deliberately not returned,
+  // because it buffers without starting in the user's Nuvio setup.
+  return unique(candidates).filter(function (url) {
     return /\.m3u8(?:[?#]|$)/i.test(url);
-  });
-  return hlsCandidates.length ? hlsCandidates : uniqueCandidates.filter(function (url) {
-    return /\.mp4(?:[?#]|$)/i.test(url);
   });
 }
 
