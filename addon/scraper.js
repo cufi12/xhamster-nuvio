@@ -401,6 +401,38 @@ async function epornerStreams(id) {
     const qb = Number((b.quality.match(/\d+/) || [0])[0]);
     return qb - qa;
   });
+  // Probe only the response headers and a tiny byte range before exposing a
+  // candidate to Nuvio. This distinguishes a reachable media file from a
+  // stale URL or a source that rejects ordinary server-side playback requests.
+  if (uniqueCandidates.length) {
+    const probe = uniqueCandidates[0].url;
+    try {
+      const response = await fetch(probe, {
+        method: "GET",
+        headers: {
+          Range: "bytes=0-1",
+          Accept: "video/*,application/vnd.apple.mpegurl,*/*",
+          "User-Agent": "Mozilla/5.0",
+          Referer: EP_BASE + "/",
+          Origin: EP_BASE
+        },
+        redirect: "follow",
+        signal: AbortSignal.timeout(8000)
+      });
+      const host = new URL(response.url || probe).hostname.toLowerCase();
+      console.info("[CVN stream] Eporner probe", JSON.stringify({
+        host,
+        status: response.status,
+        contentType: response.headers.get("content-type") || "",
+        contentRange: response.headers.get("content-range") || "",
+        acceptRanges: response.headers.get("accept-ranges") || ""
+      }));
+      if (response.body) await response.body.cancel().catch(() => {});
+    } catch (error) {
+      console.warn("[CVN stream] Eporner probe failed", String(error?.name || "Error"));
+    }
+  }
+
   const title = String(video.title || "Eporner");
   return uniqueCandidates.slice(0, 5).map(candidate => ({
     name: "CVN Eporner",
