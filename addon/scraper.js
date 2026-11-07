@@ -66,17 +66,11 @@ async function pageMeta(url) {
   };
 }
 const CATALOG_SEARCHES = {
-  // Search terms are public-site queries, not guarantees about a video's language or studio status.
+  // Search phrases are public-site queries; they do not guarantee language or studio metadata.
   xh_german_studio: "German studio",
-  xh_german_dub: "German Dub",
-  xh_mario_salieri_german_dub: "Mario Salieri",
-  xh_anime_german: "German Anime",
-  xh_anime_german_new: "German Anime new",
   xh_hentai_german_dub: "Hentai German Dub",
-  xh_hentai_german: "German Hentai",
-  xh_hentai_german_new: "German Hentai new",
-  xh_german_new: "German new",
-  xh_german_popular: "German popular"
+  xh_mario_salieri_german_dub: "Mario Salieri German Dub",
+  xh_german_all: "German"
 };
 async function catalog(args) {
   const search = String(args.extra?.search || CATALOG_SEARCHES[args.id] || "").trim();
