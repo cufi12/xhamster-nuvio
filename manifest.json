@@ -1,49 +1,35 @@
 [
   {
-    "id": "cvn-de-classics",
-    "name": "CVN · Deutsche Studios & Klassiker",
-    "description": "Kostenlose, öffentlich zugängliche deutsche Produktionen und Klassiker. Aktiviert erst nach Integration geprüfter Quellen.",
-    "version": "1.0.0",
+    "id": "cvn-de-studios",
+    "name": "CVN · Deutsche Studios",
+    "description": "Deutsche Studios und deutsche Filmproduktionen; nur kostenlose, rechtmäßig nutzbare Quellen.",
+    "version": "1.1.0",
     "author": "CVN",
-    "supportedTypes": [
-      "movie"
-    ],
+    "supportedTypes": ["movie"],
     "filename": "providers/de-classics.js",
     "enabled": true,
-    "contentLanguage": [
-      "de"
-    ]
+    "contentLanguage": ["de"]
   },
   {
-    "id": "cvn-german-dub",
-    "name": "CVN · German Dub · Italien, Europa & USA",
-    "description": "Nur Produktionen mit nachgewiesener deutscher Synchron-Tonspur; keine bloßen Untertitel-Treffer.",
-    "version": "1.0.0",
+    "id": "cvn-german-dub-world",
+    "name": "CVN · German Dub · Aller Welt",
+    "description": "Internationale Filmproduktionen mit nachgewiesener deutscher Synchron-Tonspur; keine Untertitel als Ersatz.",
+    "version": "1.1.0",
     "author": "CVN",
-    "supportedTypes": [
-      "movie"
-    ],
+    "supportedTypes": ["movie"],
     "filename": "providers/german-dub.js",
     "enabled": true,
-    "contentLanguage": [
-      "de",
-      "it",
-      "en"
-    ]
+    "contentLanguage": ["de"]
   },
   {
-    "id": "cvn-hentai-jp",
-    "name": "CVN · Hentai · Japanischer Originalton",
-    "description": "Kostenlose, öffentlich zugängliche japanische Originalton-Titel.",
-    "version": "1.0.0",
+    "id": "cvn-hentai-german-dub",
+    "name": "CVN · Hentai · German Dub",
+    "description": "Japanische Hentai-Filme und Serien mit nachgewiesener deutscher Synchronisation; nur kostenlose, rechtmäßig nutzbare Quellen.",
+    "version": "1.1.0",
     "author": "CVN",
-    "supportedTypes": [
-      "movie"
-    ],
+    "supportedTypes": ["movie", "series"],
     "filename": "providers/hentai-jp.js",
     "enabled": true,
-    "contentLanguage": [
-      "ja"
-    ]
+    "contentLanguage": ["de"]
   }
 ]
