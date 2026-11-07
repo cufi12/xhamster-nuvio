@@ -65,8 +65,15 @@ async function pageMeta(url) {
     background: poster || undefined, url
   };
 }
+const CATALOG_SEARCHES = {
+  // Search terms are public-site queries, not guarantees about a video's language or studio status.
+  xh_german_studio: "German studio",
+  xh_german_dub: "German Dub",
+  xh_german_new: "German",
+  xh_german_popular: "German"
+};
 async function catalog(args) {
-  const search = String(args.extra?.search || "").trim();
+  const search = String(args.extra?.search || CATALOG_SEARCHES[args.id] || "").trim();
   const skip = Math.max(0, Number(args.extra?.skip || 0));
   if (!search) {
     // The front page is a public, ordinary listing; no access controls are bypassed.
