@@ -223,6 +223,16 @@ function getStreams(tmdbId, mediaType) {
       // Nuvio supplies a TMDB ID (not the catalog IMDb ID). Search both the
       // localized and original TMDB titles, with and without the release year.
       var titles = unique([metadata.title, metadata.originalTitle]);
+
+      // Known alternate xHamster title supplied by the user for this film.
+      var normalizedTitle = String(metadata.title || "").toLowerCase()
+        .replace(/[^a-z0-9]+/g, " ").replace(/\\s+/g, " ").trim();
+      var knownPages = [];
+      if (normalizedTitle === "barbi in the imperfect world") {
+        titles.push("Barbys Erotic World");
+        knownPages.push("https://ge.xhamster.com/videos/barbys-erotic-world-9853837");
+      }
+
       var queries = [];
       titles.forEach(function (title) {
         queries.push(title);
@@ -232,7 +242,7 @@ function getStreams(tmdbId, mediaType) {
       console.log("[CVN-xHamster] TMDB " + tmdbId + " resolved to: " + metadata.title + (metadata.year ? " (" + metadata.year + ")" : ""));
       return Promise.all(queries.map(fetchSearchPages))
         .then(function (groups) {
-          var pages = unique([].concat.apply([], groups)).slice(0, 30);
+          var pages = unique([].concat.apply([], groups).concat(knownPages)).slice(0, 30);
           console.log("[CVN-xHamster] Search pages found: " + pages.length);
           return Promise.all(pages.map(function (pageUrl) {
             return fetchMatchingPage(pageUrl, titles);
