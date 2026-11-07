@@ -4,6 +4,9 @@ const EP_BASE = "https://www.eporner.com";
 const AE_API = "https://adultembed.com/api/v1";
 const AE_BASE = "https://adultembed.com";
 
+const META_CACHE = new Map();
+const META_CACHE_LIMIT = 2000;
+
 const VIDEO_RE = /^https:\/\/(?:[a-z0-9-]+\.)*xhamster\.com\/videos?\//i;
 
 function decode(value) {
@@ -368,21 +371,29 @@ async function catalog(args) {
   for (const meta of [...xhMetas, ...epMetas, ...aeMetas]) {
     if (!meta || !meta.id || seen.has(meta.id)) continue;
     seen.add(meta.id);
+    // Keep the exact catalog preview in memory so the subsequent detail
+    // request does not depend on a second, potentially throttled provider call.
+    META_CACHE.set(String(meta.id), meta);
     merged.push(meta);
   }
   return { metas: merged.slice(skip, skip + 40), cacheMaxAge: search ? 300 : 900 };
 }
 
 async function metadata(id) {
-  if (String(id || "").startsWith("ae:")) {
+  const key = String(id || "");
+  const cached = META_CACHE.get(key);
+  if (cached) {
+    return { meta: { ...cached } };
+  }
+  if (key.startsWith("ae:")) {
     const meta = await adultEmbedMetadata(id);
     return { meta: meta || { id: String(id), type: "movie", name: "AdultEmbed Video" } };
   }
-  if (String(id || "").startsWith("ep:")) {
+  if (key.startsWith("ep:")) {
     const meta = await epornerMetadata(id);
     return { meta: meta || { id: String(id), type: "movie", name: "Eporner Video" } };
   }
-  const url = urlFromId(id);
+  const url = urlFromId(key);
   if (!url) {
     return { meta: { id: String(id || ""), type: "movie", name: "xHamster Video" } };
   }
