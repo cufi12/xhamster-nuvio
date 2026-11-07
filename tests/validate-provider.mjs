@@ -1,16 +1,37 @@
 import fs from "node:fs";
+import path from "node:path";
 import assert from "node:assert/strict";
+import { createRequire } from "node:module";
 
 const manifest = JSON.parse(fs.readFileSync("manifest.json", "utf8"));
-const providerSource = fs.readFileSync("providers/xhamster.js", "utf8");
+const providerEntries = manifest.scrapers || [];
 
-assert.equal(manifest.version, "1.9.8");
-assert.equal(manifest.scrapers?.[0]?.version, manifest.version);
-assert.equal(manifest.scrapers?.[0]?.filename, "providers/xhamster.js");
-assert.equal(manifest.scrapers?.[0]?.hasSettings, true);
-assert.equal(manifest.scrapers?.[0]?.contentLanguage, undefined,
+assert.equal(manifest.version, "2.1.0");
+assert.ok(providerEntries.length >= 1, "Repository must expose at least one provider.");
+assert.equal(new Set(providerEntries.map((entry) => entry.id)).size, providerEntries.length,
+  "Provider IDs must be unique.");
+assert.equal(new Set(providerEntries.map((entry) => entry.filename)).size, providerEntries.length,
+  "Each provider must have its own source file.");
+
+for (const entry of providerEntries) {
+  assert.ok(entry.id && entry.name && entry.version && entry.filename,
+    "Every provider needs id, name, version, and filename.");
+  assert.ok(fs.existsSync(path.resolve(entry.filename)),
+    `Provider source file is missing: ${entry.filename}`);
+  assert.deepEqual(entry.supportedTypes, ["movie"],
+    "Current providers must explicitly declare the media types they support.");
+}
+
+const xhamster = providerEntries.find((entry) => entry.id === "xhamster");
+assert.ok(xhamster, "The existing xHamster provider must remain registered.");
+assert.equal(xhamster.version, manifest.version);
+assert.equal(xhamster.filename, "providers/xhamster.js");
+assert.equal(xhamster.hasSettings, true);
+assert.equal(xhamster.contentLanguage, undefined,
   "Do not advertise German content until language is verified.");
-assert.ok(manifest.scrapers?.[0]?.description.includes("nicht verifiziert"));
+assert.ok(xhamster.description.includes("nicht verifiziert"));
+
+const providerSource = fs.readFileSync(xhamster.filename, "utf8");
 assert.ok(providerSource.includes("getStreams: getStreams"));
 assert.ok(providerSource.includes("onSettings: onSettings"));
 assert.ok(providerSource.includes("globalThis.SCRAPER_SETTINGS"));
@@ -18,14 +39,7 @@ assert.ok(!providerSource.includes("4ef0d7355d9ffb5151e987764708ce96"));
 assert.ok(!providerSource.includes("TMDB_API_KEY"), "No stale TMDB_API_KEY references may remain.");
 assert.equal((providerSource.match(/encodeURIComponent\(apiKey\)/g) || []).length, 2,
   "Both TMDB endpoints must use the configured API key.");
-assert.ok(providerSource.includes('key: "tmdbApiKey"'));
-assert.ok(providerSource.includes("isPassword: true"));
-assert.deepEqual(manifest.scrapers?.[0]?.supportedTypes, ["movie"],
-  "NuvioMobile normalizes other to tv, so this provider must advertise movies only.");
 
-console.log("Provider manifest and static contract checks passed.");
-
-import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
 globalThis.SCRAPER_SETTINGS = { tmdbApiKey: "test-key-only" };
 
@@ -77,13 +91,11 @@ try {
   const apiKeySetting = settingsSchema.find((setting) => setting.key === "tmdbApiKey");
   assert.ok(apiKeySetting, "TMDB API key setting must be exposed.");
   assert.equal(apiKeySetting.type, "text");
-  assert.equal(apiKeySetting.isPassword, true, "Provider schema must declare the field as password-style; UI masking depends on the Nuvio app.");
+  assert.equal(apiKeySetting.isPassword, true);
   assert.ok(apiKeySetting.label && apiKeySetting.description);
-  assert.ok(!JSON.stringify(settingsSchema).includes("test-key-only"),
-    "Settings schema must not expose a configured secret.");
+  assert.ok(!JSON.stringify(settingsSchema).includes("test-key-only"));
 
   const streams = await provider.getStreams("12345", "movie");
-
   assert.equal(streams.length, 1);
   assert.equal(streams[0].title, "Test Film");
   assert.equal(streams[0].url, "https://cdn.example.test/video.m3u8");
@@ -98,7 +110,7 @@ try {
   assert.deepEqual(await provider.getStreams("12345", "movie"), []);
   assert.equal(requestedUrls.length, beforeMissingKey);
 
-  console.log("Provider mocked runtime checks passed.");
+  console.log("Multi-provider manifest checks and xHamster mocked runtime checks passed.");
 } finally {
   globalThis.fetch = originalFetch;
   delete globalThis.SCRAPER_SETTINGS;
