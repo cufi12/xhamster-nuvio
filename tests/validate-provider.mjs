@@ -37,8 +37,8 @@ assert.ok(providerSource.includes("onSettings: onSettings"));
 assert.ok(providerSource.includes("globalThis.SCRAPER_SETTINGS"));
 assert.ok(!providerSource.includes("4ef0d7355d9ffb5151e987764708ce96"));
 assert.ok(!providerSource.includes("TMDB_API_KEY"), "No stale TMDB_API_KEY references may remain.");
-assert.equal((providerSource.match(/encodeURIComponent\(apiKey\)/g) || []).length, 2,
-  "Both TMDB endpoints must use the configured API key.");
+assert.equal((providerSource.match(/encodeURIComponent\(credentials\.apiKey\)/g) || []).length, 1,
+  "The shared TMDB request helper must append the configured v3 API key.");
 
 const require = createRequire(import.meta.url);
 globalThis.SCRAPER_SETTINGS = { tmdbApiKey: "test-key-only" };
