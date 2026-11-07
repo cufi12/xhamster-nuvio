@@ -5,6 +5,7 @@ const scraper = require("./scraper");
   const savedToken = process.env.APIFY_TOKEN;
   delete process.env.APIFY_TOKEN;
   assert.deepEqual(await scraper.catalog({ type: "movie", id: "xh_search" }), { metas: [], cacheMaxAge: 300 });
+  assert.deepEqual(await scraper.catalog({ type: "movie", id: "xh_latest" }), { metas: [], cacheMaxAge: 300 });
   for (const id of ["xh_category", "xh_tag", "xh_creator", "xh_channel"]) {
     assert.deepEqual(await scraper.catalog({ type: "movie", id }), { metas: [], cacheMaxAge: 120 });
   }
