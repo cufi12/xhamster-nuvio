@@ -109,9 +109,24 @@ async function pageMeta(url) {
 }
 
 
+function packedId(prefix, data) { return prefix + Buffer.from(JSON.stringify(data)).toString("base64url"); }
+function unpackedId(id, prefix) {
+  const value = String(id || "");
+  if (!value.startsWith(prefix)) return null;
+  try { const parsed = JSON.parse(Buffer.from(value.slice(prefix.length), "base64url").toString("utf8")); return parsed && typeof parsed === "object" ? parsed : null; }
+  catch (_) { return null; }
+}
+function normalizeImage(value) {
+  if (value && typeof value === "object") value = value.url || value.src || value.href;
+  const raw = decode(String(value || "")).trim();
+  if (/^https:\/\//i.test(raw)) return raw;
+  if (raw.startsWith("//")) return "https:" + raw;
+  return "";
+}
 function aeIdFromId(id) {
   const value = String(id || "");
-  return value.startsWith("ae:") ? value.slice(3) : "";
+  if (!value.startsWith("ae:")) return "";
+  return unpackedId(value, "ae:")?.v || value.slice(3);
 }
 function aeVideoId(video) { return String(video?.id || "").trim(); }
 function aePlayerUrl(video) {
@@ -164,15 +179,11 @@ async function adultEmbedCatalog(catalogId, skip) {
   return videos.slice(skip, skip + 40).map(video => {
     const id = aeVideoId(video);
     const translation = video.translation || {};
-    const poster = video.thumbnail || video.thumb || video.image || video.poster;
-    return {
-      id: "ae:" + id, type: "movie",
-      name: String(translation.title || video.title || "AdultEmbed Video"),
-      poster: poster || undefined, background: poster || undefined,
-      posterShape: "landscape",
-      description: String(translation.description || video.description || ""),
-      url: aePlayerUrl(video) || undefined
-    };
+    const poster = normalizeImage(video.thumbnail || video.thumb || video.image || video.poster);
+    const meta = { type: "movie", name: String(translation.title || video.title || "AdultEmbed Video"),
+      poster: poster || undefined, background: poster || undefined, posterShape: "landscape",
+      description: String(translation.description || video.description || ""), url: aePlayerUrl(video) || undefined };
+    return { ...meta, id: packedId("ae:", { v: id, ...meta }) };
   });
 }
 async function adultEmbedMetadata(id) {
@@ -184,15 +195,12 @@ async function adultEmbedMetadata(id) {
   const video = data.video || data;
   if (!video || !aeVideoId(video)) return null;
   const translation = video.translation || {};
-  const poster = video.thumbnail || video.thumb || video.image || video.poster;
-  return {
-    id: "ae:" + videoId, type: "movie",
-    name: String(translation.title || video.title || "AdultEmbed Video"),
-    poster: poster || undefined, background: poster || undefined,
-    posterShape: "landscape",
+  const poster = normalizeImage(video.thumbnail || video.thumb || video.image || video.poster);
+  const meta = { type: "movie", name: String(translation.title || video.title || "AdultEmbed Video"),
+    poster: poster || undefined, background: poster || undefined, posterShape: "landscape",
     description: String(translation.description || video.description || ""),
-    url: aePlayerUrl(video) || (AE_BASE + "/player/embed/" + encodeURIComponent(videoId) + "/")
-  };
+    url: aePlayerUrl(video) || (AE_BASE + "/player/embed/" + encodeURIComponent(videoId) + "/") };
+  return { ...meta, id: packedId("ae:", { v: videoId, ...meta }) };
 }
 async function adultEmbedStreams(id) {
   const videoId = aeIdFromId(id);
@@ -207,7 +215,8 @@ async function adultEmbedStreams(id) {
 
 function epIdFromId(id) {
   const value = String(id || "");
-  return value.startsWith("ep:") ? value.slice(3) : "";
+  if (!value.startsWith("ep:")) return "";
+  return unpackedId(value, "ep:")?.v || value.slice(3);
 }
 function epVideoId(video) {
   return String(video?.id || video?.video_id || "").trim();
@@ -264,14 +273,11 @@ async function epornerCatalog(catalogId, skip) {
   return page.map(video => {
     const id = epVideoId(video);
     const url = epVideoUrl(video);
-    const poster = video.default_thumb || video.thumb || video.image || video.thumbnail;
-    const title = String(video.title || "Eporner Video").trim();
-    return {
-      id: "ep:" + id, type: "movie", name: title,
-      poster: poster || undefined, background: poster || undefined,
-      posterShape: "landscape", description: epTags(video) || undefined,
-      url: url || undefined
-    };
+    const poster = normalizeImage(video.default_thumb || video.thumb || video.image || video.thumbnail);
+    const meta = { type: "movie", name: String(video.title || "Eporner Video").trim(),
+      poster: poster || undefined, background: poster || undefined, posterShape: "landscape",
+      description: epTags(video) || undefined, url: url || undefined };
+    return { ...meta, id: packedId("ep:", { v: id, ...meta }) };
   });
 }
 async function epornerMetadata(id) {
@@ -283,13 +289,11 @@ async function epornerMetadata(id) {
   const data = await response.json();
   const video = (Array.isArray(data.videos) ? data.videos : [])[0];
   if (!video) return null;
-  const poster = video.default_thumb || video.thumb || video.image || video.thumbnail;
-  return {
-    id: "ep:" + videoId, type: "movie", name: String(video.title || "Eporner Video"),
-    poster: poster || undefined, background: poster || undefined,
-    posterShape: "landscape", description: epTags(video) || undefined,
-    url: epVideoUrl(video) || undefined
-  };
+  const poster = normalizeImage(video.default_thumb || video.thumb || video.image || video.thumbnail);
+  const meta = { type: "movie", name: String(video.title || "Eporner Video"),
+    poster: poster || undefined, background: poster || undefined, posterShape: "landscape",
+    description: epTags(video) || undefined, url: epVideoUrl(video) || undefined };
+  return { ...meta, id: packedId("ep:", { v: videoId, ...meta }) };
 }
 async function epornerStreams(id) {
   const videoId = epIdFromId(id);
@@ -384,6 +388,8 @@ async function catalog(args) {
 
 async function metadata(id) {
   const key = String(id || "");
+  const embedded = key.startsWith("ae:") ? unpackedId(key, "ae:") : key.startsWith("ep:") ? unpackedId(key, "ep:") : null;
+  if (embedded?.name && embedded?.type === "movie") return { meta: { ...embedded, id: key } };
   const cached = META_CACHE.get(key);
   if (cached) {
     return { meta: { ...cached } };
