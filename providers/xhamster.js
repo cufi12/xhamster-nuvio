@@ -12,7 +12,10 @@ function decodeHtml(value) {
     .replace(/&quot;/g, '"')
     .replace(/&#39;|&apos;/g, "'")
     .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">");
+    .replace(/&gt;/g, ">")
+    .replace(/\\u0026/gi, "&")
+    .replace(/\\u003d/gi, "=")
+    .replace(/\\u002f/gi, "/");
 }
 
 function absoluteUrl(value, base) {
@@ -56,6 +59,7 @@ function metadataFromTmdbId(id, mediaType) {
   return requestJson(url).then(function (data) {
     return {
       title: data.title || data.name || data.original_title || data.original_name || "",
+      originalTitle: data.original_title || data.original_name || "",
       year: String(data.release_date || data.first_air_date || "").slice(0, 4)
     };
   });
@@ -73,6 +77,7 @@ function metadataFromImdbId(imdbId) {
     if (item) {
       return {
         title: item.title || item.name || item.original_title || item.original_name || "",
+        originalTitle: item.original_title || item.original_name || "",
         year: String(item.release_date || item.first_air_date || "").slice(0, 4)
       };
     }
@@ -121,7 +126,7 @@ function findVideoPages(html) {
 function extractMedia(html, pageUrl) {
   var candidates = [];
   var patterns = [
-    /["'](?:contentUrl|src|file|videoUrl)["']\s*:\s*["']([^"']+)["']/gi,
+    /["'](?:contentUrl|src|file|videoUrl|url)["']\s*:\s*["']([^"']+)["']/gi,
     /<(?:source|video)[^>]+(?:src|data-src)\s*=\s*["']([^"']+)["']/gi,
     /<meta[^>]+(?:property|name)=["']og:video(?::url)?["'][^>]+content=["']([^"']+)["']/gi
   ];
@@ -211,20 +216,30 @@ function getStreams(tmdbId, mediaType) {
     .then(function (metadata) {
       if (!metadata || !metadata.title) return [];
 
-      var queries = [metadata.title];
-      if (metadata.year) queries.push(metadata.title + " " + metadata.year);
+      // Nuvio supplies a TMDB ID (not the catalog IMDb ID). Search both the
+      // localized and original TMDB titles, with and without the release year.
+      var titles = unique([metadata.title, metadata.originalTitle]);
+      var queries = [];
+      titles.forEach(function (title) {
+        queries.push(title);
+        if (metadata.year) queries.push(title + " " + metadata.year);
+      });
 
+      console.log("[CVN-xHamster] TMDB " + tmdbId + " resolved to: " + metadata.title + (metadata.year ? " (" + metadata.year + ")" : ""));
       return Promise.all(queries.map(fetchSearchPages))
         .then(function (groups) {
-          var pages = unique([].concat.apply([], groups)).slice(0, 20);
+          var pages = unique([].concat.apply([], groups)).slice(0, 30);
+          console.log("[CVN-xHamster] Search pages found: " + pages.length);
           return Promise.all(pages.map(function (pageUrl) {
             return fetchMatchingPage(pageUrl, metadata.title);
           }));
         })
         .then(function (groups) {
-          return groups.reduce(function (all, group) {
+          var streams = groups.reduce(function (all, group) {
             return all.concat(group);
           }, []);
+          console.log("[CVN-xHamster] Matching direct streams: " + streams.length);
+          return streams;
         });
     })
     .catch(function () {
