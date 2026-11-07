@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 const manifest = JSON.parse(fs.readFileSync("manifest.json", "utf8"));
 const providerSource = fs.readFileSync("providers/xhamster.js", "utf8");
 
-assert.equal(manifest.version, "1.9.7");
+assert.equal(manifest.version, "1.9.8");
 assert.equal(manifest.scrapers?.[0]?.version, manifest.version);
 assert.equal(manifest.scrapers?.[0]?.filename, "providers/xhamster.js");
 assert.equal(manifest.scrapers?.[0]?.hasSettings, true);
@@ -20,7 +20,8 @@ assert.equal((providerSource.match(/encodeURIComponent\(apiKey\)/g) || []).lengt
   "Both TMDB endpoints must use the configured API key.");
 assert.ok(providerSource.includes('key: "tmdbApiKey"'));
 assert.ok(providerSource.includes("isPassword: true"));
-assert.deepEqual(manifest.scrapers?.[0]?.supportedTypes, ["movie", "other"]);
+assert.deepEqual(manifest.scrapers?.[0]?.supportedTypes, ["movie"],
+  "NuvioMobile normalizes other to tv, so this provider must advertise movies only.");
 
 console.log("Provider manifest and static contract checks passed.");
 
@@ -89,6 +90,7 @@ try {
   assert.equal(streams[0].quality, "HLS");
   assert.ok(!streams.some((stream) => stream.title === "Completely Unrelated"));
   assert.deepEqual(await provider.getStreams("12345", "tv"), []);
+  assert.deepEqual(await provider.getStreams("12345", "other"), []);
   assert.ok(requestedUrls.some((url) => url.includes("api_key=test-key-only")));
 
   globalThis.SCRAPER_SETTINGS = {};
