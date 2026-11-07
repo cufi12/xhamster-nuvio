@@ -1,6 +1,6 @@
 # CVN Gratis-Katalog für Nuvio
 
-Dieses Repository ist für **Nuvio Plugins** bestimmt, nicht für Stremio-Add-ons.
+Dieses Repository ist für **Nuvio JavaScript-Plugin-Repositories** bestimmt, nicht für Stremio-Add-ons.
 
 ## Installation
 
@@ -24,9 +24,9 @@ Manifest-URL:
 
 ## Technischer Status – ausdrücklich kein Release
 
-Das Manifest verwendet das Nuvio-Repositoryformat mit einem `scrapers`-Array. Nuvio-Provider müssen `getStreams(tmdbId, mediaType, season, episode)` exportieren und ein Array abspielbarer Stream-Objekte zurückgeben.
+Das Manifest entspricht dem aktuellen Nuvio-Plugin-Repositorymodell (`PluginManifest`) mit `name`, `version` und einem `scrapers`-Array. Jeder Eintrag enthält die vom Nuvio-Modell benötigten Felder `id`, `name`, `version` und `filename`. Nuvio ruft `getStreams(tmdbId, mediaType, season, episode)` auf und erwartet ein Array von Stream-Objekten (`title`, `url`, optional `name`, `quality`, `language`, `headers`). Der aktuelle NuvioTV-Quellcode verwendet für JS-Plugins QuickJS; ältere Provider-Anleitungen mit Hermes sind nicht maßgeblich.
 
-Die drei Provider-Dateien sind derzeit Platzhalter und liefern keine Streams. Deshalb sind alle drei Einträge im Manifest **deaktiviert**. Es wurde noch kein End-to-End-Test in der Nuvio-App durchgeführt. Dieses Repository ist aktuell **nicht als funktionierender Videokatalog freigegeben**.
+Die drei Provider-Dateien sind derzeit Platzhalter und liefern keine Streams. Deshalb sind alle drei Einträge im Manifest **deaktiviert**. Es wurde noch kein End-to-End-Test in der Nuvio-App durchgeführt. Die lokale Vertragsprüfung ersetzt weder den Nuvio-Plugin-Tester noch einen echten Wiedergabetest. Dieses Repository ist aktuell **nicht als funktionierender Videokatalog freigegeben**.
 
 ## Vor einer Freigabe zwingend
 
