@@ -482,7 +482,7 @@ async function epornerStreams(id) {
       const host = new URL(response.url || candidate.url).hostname.toLowerCase();
       const contentType = (response.headers.get("content-type") || "").toLowerCase();
       const status = response.status;
-      const mediaType = /^(?:video\\/|application\\/(?:vnd\\.apple\\.mpegurl|x-mpegurl|mpegurl))/.test(contentType);
+      const mediaType = contentType.startsWith("video/") || ["application/vnd.apple.mpegurl", "application/x-mpegurl", "application/mpegurl"].some(type => contentType.startsWith(type));
       const reachable = (status === 200 || status === 206) && mediaType;
       console.info("[CVN stream] Eporner probe", JSON.stringify({
         host, status, contentType,
