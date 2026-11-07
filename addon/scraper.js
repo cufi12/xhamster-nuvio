@@ -400,9 +400,11 @@ async function catalog(args) {
     }
   };
 
-  const [epMetas, aeMetas, xhMetas] = await Promise.all([
+  // AdultEmbed's documented API exposes an iframe player only, not a
+  // direct MP4/HLS source. Nuvio's native player cannot decode that HTML page,
+  // so omit those entries rather than presenting titles that cannot play.
+  const [epMetas, xhMetas] = await Promise.all([
     safe("Eporner", () => epornerCatalog(args.id, 0)),
-    safe("AdultEmbed", () => adultEmbedCatalog(args.id, 0)),
     safe("xHamster", async () => {
       if (search) {
         const links = await searchVideoLinks(search);
@@ -419,7 +421,7 @@ async function catalog(args) {
   // Merge before pagination so skip is applied once to the combined catalog.
   const seen = new Set();
   const merged = [];
-  for (const meta of [...xhMetas, ...epMetas, ...aeMetas]) {
+  for (const meta of [...xhMetas, ...epMetas]) {
     if (!meta || !meta.id || seen.has(meta.id)) continue;
     seen.add(meta.id);
     // Keep the exact catalog preview in memory so the subsequent detail
