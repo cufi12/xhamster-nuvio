@@ -1,35 +1,52 @@
-[
-  {
-    "id": "cvn-de-studios",
-    "name": "CVN · Deutsche Studios",
-    "description": "Deutsche Studios und deutsche Filmproduktionen; nur kostenlose, rechtmäßig nutzbare Quellen.",
-    "version": "1.1.0",
-    "author": "CVN",
-    "supportedTypes": ["movie"],
-    "filename": "providers/de-classics.js",
-    "enabled": true,
-    "contentLanguage": ["de"]
-  },
-  {
-    "id": "cvn-german-dub-world",
-    "name": "CVN · German Dub · Aller Welt",
-    "description": "Internationale Filmproduktionen mit nachgewiesener deutscher Synchron-Tonspur; keine Untertitel als Ersatz.",
-    "version": "1.1.0",
-    "author": "CVN",
-    "supportedTypes": ["movie"],
-    "filename": "providers/german-dub.js",
-    "enabled": true,
-    "contentLanguage": ["de"]
-  },
-  {
-    "id": "cvn-hentai-german-dub",
-    "name": "CVN · Hentai · German Dub",
-    "description": "Japanische Hentai-Filme und Serien mit nachgewiesener deutscher Synchronisation; nur kostenlose, rechtmäßig nutzbare Quellen.",
-    "version": "1.1.0",
-    "author": "CVN",
-    "supportedTypes": ["movie", "series"],
-    "filename": "providers/hentai-jp.js",
-    "enabled": true,
-    "contentLanguage": ["de"]
-  }
-]
+{
+  "name": "CVN Gratis-Katalog",
+  "version": "1.2.0",
+  "scrapers": [
+    {
+      "id": "cvn-de-studios",
+      "name": "CVN · Deutsche Studios",
+      "description": "Deutsche Studios und Produktionen. Derzeit deaktiviert, bis kostenlose und autorisierte Quellen technisch getestet sind.",
+      "version": "1.2.0",
+      "author": "CVN",
+      "supportedTypes": [
+        "movie"
+      ],
+      "filename": "providers/de-classics.js",
+      "enabled": false,
+      "contentLanguage": [
+        "de"
+      ]
+    },
+    {
+      "id": "cvn-german-dub-world",
+      "name": "CVN · German Dub · Aller Welt",
+      "description": "Internationale Filme mit nachgewiesener deutscher Synchron-Tonspur. Derzeit deaktiviert, bis Quellen und Wiedergabe geprüft sind.",
+      "version": "1.2.0",
+      "author": "CVN",
+      "supportedTypes": [
+        "movie"
+      ],
+      "filename": "providers/german-dub.js",
+      "enabled": false,
+      "contentLanguage": [
+        "de"
+      ]
+    },
+    {
+      "id": "cvn-hentai-german-dub",
+      "name": "CVN · Hentai · German Dub",
+      "description": "Japanische Hentai-Filme und Serien mit deutscher Synchronisation. Derzeit deaktiviert, bis Quellen und Wiedergabe geprüft sind.",
+      "version": "1.2.0",
+      "author": "CVN",
+      "supportedTypes": [
+        "movie",
+        "tv"
+      ],
+      "filename": "providers/hentai-jp.js",
+      "enabled": false,
+      "contentLanguage": [
+        "de"
+      ]
+    }
+  ]
+}
