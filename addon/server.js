@@ -4,17 +4,17 @@ const scraper = require("./scraper");
 const manifest = {
   id: "community.cvn.xhamster.catalog",
   version: "0.2.0",
-  name: "CVN Deutsch-Katalog",
-  description: "xHamster-Suche mit getrennten deutschen Suchkategorien; Dub-Angaben bleiben bis zum Audionachweis unverifiziert.",
+  name: "CVN Multi-Plattform-Katalog",
+  description: "Gemeinsame deutsche Suchkataloge aus xHamster, Eporner und AdultEmbed; Quellen werden getrennt gekennzeichnet.",
   resources: ["catalog", "meta", "stream"],
   types: ["movie"],
   idPrefixes: ["xh:", "ep:", "ae:"],
   catalogs: [
-    { type: "movie", id: "xh_german_studio", name: "Deutsche Filme", showInHome: true, pageSize: 40 },
-    { type: "movie", id: "xh_german_all", name: "German Dub", showInHome: true, pageSize: 40 },
-    { type: "movie", id: "xh_hentai_german_dub", name: "Hentai Dub", showInHome: true, pageSize: 40 },
-    { type: "movie", id: "xh_mario_salieri_german_dub", name: "Salieri German Dub", showInHome: true, pageSize: 40 },
-    { type: "movie", id: "xh_free_german_platforms", name: "Weitere Dub-Suchtreffer (xHamster)", showInHome: true, pageSize: 40 }
+    { type: "movie", id: "xh_german_studio", name: "Deutsche Filme · alle Plattformen", showInHome: true, pageSize: 40 },
+    { type: "movie", id: "xh_german_all", name: "German Dub · alle Plattformen", showInHome: true, pageSize: 40 },
+    { type: "movie", id: "xh_hentai_german_dub", name: "Hentai Dub · alle Plattformen", showInHome: true, pageSize: 40 },
+    { type: "movie", id: "xh_mario_salieri_german_dub", name: "Salieri German Dub · alle Plattformen", showInHome: true, pageSize: 40 },
+    { type: "movie", id: "xh_free_german_platforms", name: "Weitere Dub-Suchtreffer · alle Plattformen", showInHome: true, pageSize: 40 }
   ],
   behaviorHints: { adult: true, configurable: false }
 };
