@@ -40,29 +40,37 @@ function isXHamsterVideoPage(url) {
   return /^https:\/\/(?:[a-z0-9-]+\.)*xhamster\.com\/videos?\//i.test(url);
 }
 
-function getTmdbApiKey() {
+function getTmdbCredentials() {
   var settings = (typeof globalThis !== "undefined" && globalThis.SCRAPER_SETTINGS) || {};
-  return String(settings.tmdbApiKey || "").trim();
+  return {
+    apiKey: String(settings.tmdbApiKey || "").trim(),
+    readAccessToken: String(settings.tmdbReadAccessToken || "").trim()
+  };
 }
 
-function requestJson(url) {
-  return fetch(url, { headers: { Accept: "application/json" } })
-    .then(function (response) {
-      if (!response.ok) throw new Error("Metadata request failed: " + response.status);
-      return response.json();
-    });
+function tmdbRequest(url) {
+  var credentials = getTmdbCredentials();
+  var headers = { Accept: "application/json" };
+  if (credentials.readAccessToken) {
+    headers.Authorization = "Bearer " + credentials.readAccessToken;
+  } else if (credentials.apiKey) {
+    url += (url.indexOf("?") >= 0 ? "&" : "?") + "api_key=" + encodeURIComponent(credentials.apiKey);
+  } else {
+    return Promise.reject(new Error("TMDB API key or Read Access Token is not configured"));
+  }
+
+  return fetch(url, { headers: headers }).then(function (response) {
+    if (!response.ok) throw new Error("TMDB request failed: " + response.status);
+    return response.json();
+  });
 }
 
 function metadataFromTmdbId(id, mediaType) {
-  var apiKey = getTmdbApiKey();
-  if (!apiKey) return Promise.reject(new Error("TMDB API key is not configured in provider settings"));
   var endpoint = mediaType === "tv" || mediaType === "series" ? "tv" : "movie";
   var url = "https://api.themoviedb.org/3/" + endpoint + "/" +
-    encodeURIComponent(String(id)) +
-    "?api_key=" + encodeURIComponent(apiKey) +
-    "&language=de-DE";
+    encodeURIComponent(String(id)) + "?language=de-DE";
 
-  return requestJson(url).then(function (data) {
+  return tmdbRequest(url).then(function (data) {
     return {
       title: data.title || data.name || data.original_title || data.original_name || "",
       originalTitle: data.original_title || data.original_name || "",
@@ -72,14 +80,11 @@ function metadataFromTmdbId(id, mediaType) {
 }
 
 function metadataFromImdbId(imdbId) {
-  var apiKey = getTmdbApiKey();
-  if (!apiKey) return Promise.reject(new Error("TMDB API key is not configured in provider settings"));
   var findUrl = "https://api.themoviedb.org/3/find/" +
     encodeURIComponent(imdbId) +
-    "?external_source=imdb_id&api_key=" + encodeURIComponent(apiKey) +
-    "&language=de-DE";
+    "?external_source=imdb_id&language=de-DE";
 
-  return requestJson(findUrl).then(function (data) {
+  return tmdbRequest(findUrl).then(function (data) {
     var item = (data.movie_results && data.movie_results[0]) ||
       (data.tv_results && data.tv_results[0]);
     if (item) {
@@ -355,15 +360,23 @@ function onSettings() {
     { type: "header", label: "TMDB-Konfiguration" },
     {
       type: "text",
+      key: "tmdbReadAccessToken",
+      label: "TMDB Read Access Token (v4)",
+      placeholder: "TMDB Bearer-Token einfügen",
+      description: "Bevorzugte Authentifizierung. Wird lokal in Nuvio gespeichert, nicht im Repository.",
+      isPassword: true
+    },
+    {
+      type: "text",
       key: "tmdbApiKey",
-      label: "TMDB API-Schlüssel",
-      placeholder: "Persönlichen TMDB API-Schlüssel eingeben",
-      description: "Wird lokal in den Plugin-Einstellungen gespeichert und nicht im Repository hinterlegt.",
+      label: "TMDB API Key (v3, optional)",
+      placeholder: "Alternativ den v3 API-Key eingeben",
+      description: "Nur als Rückfall, wenn kein v4 Read Access Token eingetragen ist.",
       isPassword: true
     },
     {
       type: "info",
-      label: "Ohne TMDB-Schlüssel kann der Provider Filmtitel nicht zuverlässig auflösen."
+      label: "Der v4 Read Access Token wird bevorzugt. Ohne v4- oder v3-Schlüssel kann der Provider keine TMDB-Metadaten laden."
     }
   ];
 }
