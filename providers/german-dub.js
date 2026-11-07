@@ -1,8 +1,7 @@
-// German Dub · Italien, Europa & USA
-// Safe placeholder: no provider source has been verified for this category yet.
-// Return no streams rather than inventing URLs or bypassing site protections.
+// German Dub · aller Welt
+// Placeholder until lawful public sources and actual German audio tracks are verified.
 function getStreams() {
-  console.log("[CVN] German Dub · Italien, Europa & USA: no verified public streams configured yet.");
+  console.log("[CVN] German Dub · aller Welt: no verified lawful streams configured yet.");
   return Promise.resolve([]);
 }
 
