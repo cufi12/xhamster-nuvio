@@ -163,7 +163,7 @@ async function pageMeta(url) {
     description: [description, audioNote].filter(Boolean).join(" "),
     audioLanguage: audioLanguage || undefined,
     germanDubMarker: isGermanDub([name, description].join(" ")),
-    germanLanguageMarker: /\\b(german|deutsch|germany|deutsche[nrms]?)\\b/i.test([name, description].join(" ")),
+    germanLanguageMarker: /\b(german|deutsch|germany|deutsche[nrms]?)\b/i.test([name, description].join(" ")),
     posterShape: "landscape", background: poster || undefined, url
   };
 }
@@ -525,10 +525,9 @@ async function catalog(args) {
   const queries = search ? [search] : (CATALOG_SEARCHES[args.id] || []);
   const isHentai = value => /hentai|anime|animated/i.test(String(value || ""));
   const isSalieri = value => /mario salieri|salieri/i.test(String(value || ""));
-  const hasGermanAudioEvidence = meta => meta?.audioLanguage === "de" ||
-    isGermanDub([meta?.name, meta?.description].join(" "));
+  const hasGermanAudioEvidence = meta => meta?.audioLanguage === "de" || meta?.germanDubMarker === true;
   const hasGermanMarker = meta => meta?.audioLanguage === "de" ||
-    /\b(german|deutsch|germany|deutsche[nrms]?)\b/i.test([meta?.name, meta?.description].join(" "));
+    meta?.germanLanguageMarker === true || meta?.germanDubMarker === true;
 
   const xhMetas = await (async () => {
     try {
