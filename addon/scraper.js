@@ -24,6 +24,56 @@ function unique(values) { return [...new Set(values.filter(Boolean))]; }
 function isGermanDub(value) {
   return /german dub(?:bed)?|ger dub|german audio|german voice|deutsch synchronisiert|deutsche synchronisation|deutsch vertont|deutsche tonspur|deutsche synchro/.test(String(value || "").toLowerCase());
 }
+function normalizeAudioLanguage(value) {
+  const lang = String(value || "").trim().toLowerCase().replace(/_/g, "-");
+  if (/^(de|deu|ger|german|deutsch)(?:-|$)/.test(lang)) return "de";
+  if (/^(en|eng|english)(?:-|$)/.test(lang)) return "en";
+  return "";
+}
+function audioLanguageFromHtml(html) {
+  const found = new Set();
+  const inspect = (node, parentIsAudio = false) => {
+    if (!node || typeof node !== "object") return;
+    if (Array.isArray(node)) { for (const item of node) inspect(item, parentIsAudio); return; }
+    const type = String(node.type || node.kind || node.mediaType || "").toLowerCase();
+    const isAudio = parentIsAudio || /audio/.test(type);
+    for (const [key, value] of Object.entries(node)) {
+      if (typeof value === "string" && /^(?:audioLanguage|audio_language|audioLang|audio_lang|spokenLanguage|spoken_language)$/i.test(key)) {
+        const normalized = normalizeAudioLanguage(value);
+        if (normalized) found.add(normalized);
+      } else if (typeof value === "string" && isAudio && /^(?:language|lang)$/i.test(key)) {
+        const normalized = normalizeAudioLanguage(value);
+        if (normalized) found.add(normalized);
+      } else if (value && typeof value === "object") inspect(value, isAudio);
+    }
+  };
+  const scripts = [];
+  const initials = html.match(/<script[^>]+id=["']initials-script["'][^>]*>([\s\S]*?)<\/script>/i);
+  if (initials) scripts.push(initials[1]);
+  const ld = html.matchAll(/<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi);
+  for (const match of ld) scripts.push(match[1]);
+  for (const source of scripts) {
+    try { inspect(JSON.parse(source.trim())); } catch (_) {}
+  }
+  return found.has("de") ? "de" : found.has("en") ? "en" : "";
+}
+async function hlsAudioLanguage(url) {
+  if (!/\.m3u8(?:$|[?#])/i.test(url)) return "";
+  try {
+    const response = await fetch(url, {
+      headers: { Accept: "application/vnd.apple.mpegurl,application/x-mpegURL,*/*", "User-Agent": "Mozilla/5.0" },
+      redirect: "follow",
+      signal: AbortSignal.timeout(6000)
+    });
+    if (!response.ok) return "";
+    const playlist = (await response.text()).slice(0, 256000);
+    if (!playlist.startsWith("#EXTM3U")) return "";
+    const languages = [...playlist.matchAll(/^#EXT-X-MEDIA:([^\\r\\n]+)$/gmi)]
+      .filter(match => /(?:^|,)TYPE=AUDIO(?:,|$)/i.test(match[1]))
+      .map(match => (match[1].match(/(?:^|,)LANGUAGE="([^"]+)"/i) || [])[1] || "");
+    return languages.some(language => normalizeAudioLanguage(language) === "de") ? "de" : "";
+  } catch (_) { return ""; }
+}
 function textFromHtml(value) {
   return decode(value.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ")).trim();
 }
@@ -101,10 +151,14 @@ async function pageMeta(url) {
   if (!name) return null;
   const poster = metaTag(html, "og:image");
   const description = metaTag(html, "og:description");
+  const audioLanguage = audioLanguageFromHtml(html);
+  const audioNote = audioLanguage === "de"
+    ? "Audio: Deutsch (durch technische Sprachmetadaten bestätigt)."
+    : "Audio-Sprache: nicht technisch bestätigt; deutsche Titel/Tags sind kein Nachweis.";
   return {
     id: makeId(url), type: "movie", name, poster: poster || undefined,
-    description: description || undefined, posterShape: "landscape",
-    background: poster || undefined, url
+    description: [description, audioNote].filter(Boolean).join(" "),
+    posterShape: "landscape", background: poster || undefined, url
   };
 }
 
@@ -619,6 +673,12 @@ async function streams(id) {
 
   const urls = unique(candidates);
   const title = metaTag(html, "og:title") || "xHamster";
+  // For HLS master playlists, language is confirmed only from an AUDIO rendition's
+  // LANGUAGE attribute (not from subtitles or the surrounding page text).
+  let hlsGermanAudio = false;
+  for (const candidate of urls.filter(value => /\\.m3u8(?:$|[?#])/i.test(value)).slice(0, 3)) {
+    if (await hlsAudioLanguage(candidate) === "de") { hlsGermanAudio = true; break; }
+  }
   if (!urls.length) {
     // The page itself is not a playable stream. Keep playback inside Nuvio
     // by returning an empty stream list instead of an external browser link.
@@ -627,7 +687,7 @@ async function streams(id) {
   return {
     streams: urls.slice(0, 5).map(u => ({
       name: "CVN xHamster",
-      title,
+      title: title + (hlsGermanAudio && /\\.m3u8(?:$|[?#])/i.test(u) ? " · Deutsch (Audio bestätigt)" : ""),
       url: u,
       behaviorHints: {
         notWebReady: true,
