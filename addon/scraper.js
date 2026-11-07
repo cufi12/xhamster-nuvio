@@ -477,8 +477,11 @@ async function catalog(args) {
   // AdultEmbed's documented API exposes an iframe player only, not a
   // direct MP4/HLS source. Nuvio's native player cannot decode that HTML page,
   // so omit those entries rather than presenting titles that cannot play.
+  // Eporner's current media host rejects ordinary playback requests (HTTP 403).
+  // Keep legacy ep: IDs resolvable, but stop advertising new Eporner entries
+  // until the provider exposes a publicly playable MP4/HLS source.
   const [epMetas, xhMetas] = await Promise.all([
-    safe("Eporner", () => epornerCatalog(args.id, 0)),
+    Promise.resolve([]),
     safe("xHamster", async () => {
       if (search) {
         const links = await searchVideoLinks(search);
