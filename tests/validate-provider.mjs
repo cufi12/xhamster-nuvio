@@ -2,28 +2,29 @@ import fs from "node:fs";
 import assert from "node:assert/strict";
 
 const manifest = JSON.parse(fs.readFileSync("manifest.json", "utf8"));
-const provider = fs.readFileSync("providers/xhamster.js", "utf8");
+const providerSource = fs.readFileSync("providers/xhamster.js", "utf8");
 
-assert.equal(manifest.version, "1.9.6");
+assert.equal(manifest.version, "1.9.7");
 assert.equal(manifest.scrapers?.[0]?.version, manifest.version);
 assert.equal(manifest.scrapers?.[0]?.filename, "providers/xhamster.js");
 assert.equal(manifest.scrapers?.[0]?.hasSettings, true);
-assert.ok(provider.includes("getStreams: getStreams"));
-assert.ok(provider.includes("onSettings: onSettings"));
-assert.ok(provider.includes("globalThis.SCRAPER_SETTINGS"));
-assert.ok(!provider.includes("4ef0d7355d9ffb5151e987764708ce96"));
-assert.ok(!provider.includes("TMDB_API_KEY"), "No stale TMDB_API_KEY references may remain.");
-assert.equal((provider.match(/encodeURIComponent\(apiKey\)/g) || []).length, 2,
+assert.equal(manifest.scrapers?.[0]?.contentLanguage, undefined,
+  "Do not advertise German content until language is verified.");
+assert.ok(manifest.scrapers?.[0]?.description.includes("nicht verifiziert"));
+assert.ok(providerSource.includes("getStreams: getStreams"));
+assert.ok(providerSource.includes("onSettings: onSettings"));
+assert.ok(providerSource.includes("globalThis.SCRAPER_SETTINGS"));
+assert.ok(!providerSource.includes("4ef0d7355d9ffb5151e987764708ce96"));
+assert.ok(!providerSource.includes("TMDB_API_KEY"), "No stale TMDB_API_KEY references may remain.");
+assert.equal((providerSource.match(/encodeURIComponent\\(apiKey\\)/g) || []).length, 2,
   "Both TMDB endpoints must use the configured API key.");
-assert.ok(provider.includes('key: "tmdbApiKey"'), "Settings must expose the TMDB key.");
-assert.ok(provider.includes('isPassword: true'), "TMDB key input must be masked.");
+assert.ok(providerSource.includes('key: "tmdbApiKey"'));
+assert.ok(providerSource.includes("isPassword: true"));
 assert.deepEqual(manifest.scrapers?.[0]?.supportedTypes, ["movie", "other"]);
-
 
 console.log("Provider manifest and static contract checks passed.");
 
 import { createRequire } from "node:module";
-
 const require = createRequire(import.meta.url);
 globalThis.SCRAPER_SETTINGS = { tmdbApiKey: "test-key-only" };
 
@@ -72,27 +73,21 @@ try {
   const provider = require("../providers/xhamster.js");
   const streams = await provider.getStreams("12345", "movie");
 
-  assert.equal(streams.length, 1, "One matching HLS stream should be returned.");
+  assert.equal(streams.length, 1);
   assert.equal(streams[0].title, "Test Film");
   assert.equal(streams[0].url, "https://cdn.example.test/video.m3u8");
   assert.equal(streams[0].quality, "HLS");
-  assert.ok(!streams.some((stream) => stream.title === "Completely Unrelated"),
-    "A page with a non-matching title must be rejected.");
-  assert.deepEqual(await provider.getStreams("12345", "tv"), [],
-    "Unsupported series type must return no streams.");
-  assert.ok(requestedUrls.some((url) => url.includes("api_key=test-key-only")),
-    "TMDB request must use the configured key.");
+  assert.ok(!streams.some((stream) => stream.title === "Completely Unrelated"));
+  assert.deepEqual(await provider.getStreams("12345", "tv"), []);
+  assert.ok(requestedUrls.some((url) => url.includes("api_key=test-key-only")));
 
   globalThis.SCRAPER_SETTINGS = {};
   const beforeMissingKey = requestedUrls.length;
-  const noKeyStreams = await provider.getStreams("12345", "movie");
-  assert.deepEqual(noKeyStreams, [], "Missing API key should safely return no streams.");
-  assert.equal(requestedUrls.length, beforeMissingKey,
-    "No network request should be made when the API key is missing.");
+  assert.deepEqual(await provider.getStreams("12345", "movie"), []);
+  assert.equal(requestedUrls.length, beforeMissingKey);
 
   console.log("Provider mocked runtime checks passed.");
 } finally {
   globalThis.fetch = originalFetch;
   delete globalThis.SCRAPER_SETTINGS;
 }
-
