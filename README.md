@@ -31,3 +31,16 @@ Die drei Provider-Dateien sind derzeit Platzhalter und liefern keine Streams. De
 ## Vor einer Freigabe zwingend
 
 Für jeden Provider müssen eine autorisierte Quelle, die geforderte deutsche Tonspur, ein tatsächlich abspielbarer Direktstream, korrekte Film-/Serienzuordnung sowie die Wiedergabe in Nuvio separat nachgewiesen und getestet werden.
+
+
+## Quellen-Audit und Tests
+
+Die aktuelle Quellenprüfung steht in [docs/source-audit.md](docs/source-audit.md). Sie dokumentiert kostenlose legale Recherche-Kandidaten, regionale Einschränkungen und die fehlenden Nachweise für Hentai mit deutscher Synchronisation.
+
+Der Provider-Vertrag kann lokal mit Node.js geprüft werden:
+
+```bash
+node tests/provider-contract.test.js
+```
+
+Der Test bestätigt nur den Modulvertrag und das sichere Verhalten ohne verifizierte Streams. Er ist **kein** Nuvio- oder Wiedergabetest.
