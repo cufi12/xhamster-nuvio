@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 const manifest = JSON.parse(fs.readFileSync("manifest.json", "utf8"));
 const provider = fs.readFileSync("providers/xhamster.js", "utf8");
 
-assert.equal(manifest.version, "1.9.3");
+assert.equal(manifest.version, "1.9.4");
 assert.equal(manifest.scrapers?.[0]?.version, manifest.version);
 assert.equal(manifest.scrapers?.[0]?.filename, "providers/xhamster.js");
 assert.equal(manifest.scrapers?.[0]?.hasSettings, true);
