@@ -144,8 +144,8 @@ function extractMedia(html, pageUrl) {
   // Prefer HLS playlists: they are generally more resilient for segmented
   // playback than a direct MP4 URL. Keep MP4 links as a fallback.
   return unique(candidates).sort(function (a, b) {
-    var aHls = /\\.m3u8(?:[?#]|$)/i.test(a) ? 1 : 0;
-    var bHls = /\\.m3u8(?:[?#]|$)/i.test(b) ? 1 : 0;
+    var aHls = /\.m3u8(?:[?#]|$)/i.test(a) ? 1 : 0;
+    var bHls = /\.m3u8(?:[?#]|$)/i.test(b) ? 1 : 0;
     return bHls - aHls;
   });
 }
@@ -210,7 +210,7 @@ function fetchMatchingPage(pageUrl, movieTitle) {
         name: "CVN-xHamster Deutsch",
         title: label,
         url: mediaUrl,
-        quality: /\\.m3u8(?:[?#]|$)/i.test(mediaUrl) ? "HLS" : "MP4"
+        quality: /\.m3u8(?:[?#]|$)/i.test(mediaUrl) ? "HLS" : "MP4"
       };
     });
   }).catch(function () {
