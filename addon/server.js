@@ -3,7 +3,7 @@ const scraper = require("./scraper");
 
 const manifest = {
   id: "community.nuvio.xhamster.apify",
-  version: "1.1.0",
+  version: "1.2.0",
   name: "xHamster Explorer (Apify)",
   description: "Suche und Entdeckung über den konfigurierten Apify Actor. Wiedergabe wird nur angeboten, wenn ein direkter Medienstream verifiziert vorliegt.",
   resources: ["catalog", "meta", "stream"],
