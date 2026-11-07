@@ -3,25 +3,17 @@ const scraper = require("./scraper");
 
 const manifest = {
   id: "community.cvn.xhamster.catalog",
-  version: "0.1.2",
+  version: "0.1.3",
   name: "CVN xHamster Katalog",
   description: "Community-Katalog mit öffentlicher xHamster-Suche und Videodetails.",
   resources: ["catalog", "meta", "stream"],
   types: ["movie"],
   idPrefixes: ["xh:"],
   catalogs: [
-    { type: "movie", id: "xh_german_studio", name: "Deutsch – Studio-Produktionen" },
-    { type: "movie", id: "xh_german_dub", name: "Deutsch – German Dub" },
-    { type: "movie", id: "xh_mario_salieri_german_dub", name: "Mario Salieri – German Dub" },
-    { type: "movie", id: "xh_anime_german", name: "Anime – Deutsch" },
-    { type: "movie", id: "xh_anime_german_new", name: "Anime – Deutsch – Neue Videos" },
+    { type: "movie", id: "xh_german_studio", name: "German – Studio-Pornos" },
     { type: "movie", id: "xh_hentai_german_dub", name: "Hentai – German Dub" },
-    { type: "movie", id: "xh_hentai_german", name: "Hentai – Deutsch" },
-    { type: "movie", id: "xh_hentai_german_new", name: "Hentai – Deutsch – Neue Videos" },
-    { type: "movie", id: "xh_german_new", name: "Deutsch – Neue Videos" },
-    { type: "movie", id: "xh_german_popular", name: "Deutsch – Beliebt" },
-    { type: "movie", id: "xh_latest", name: "xHamster – Neu" },
-    { type: "movie", id: "xh_search", name: "xHamster – Suche", extra: [{ name: "search", isRequired: true }] }
+    { type: "movie", id: "xh_mario_salieri_german_dub", name: "Mario Salieri – German Dub" },
+    { type: "movie", id: "xh_german_all", name: "Alle deutschen Filme" }
   ],
   behaviorHints: { adult: true, configurable: false }
 };
