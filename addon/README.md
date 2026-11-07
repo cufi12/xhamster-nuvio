@@ -2,6 +2,10 @@
 
 Dies ist ein eigenständiges Stremio-Protokoll-Addon für Nuvio. Es ist getrennt vom lokalen Nuvio-Scraper-Plugin im Repository-Root.
 
+## Live-Betrieb
+
+Das Addon ist auf Render bereitgestellt: `https://cvn-xhamster-catalog.onrender.com/manifest.json`. Der Dienst startet mit Node.js und liefert das Addon-Manifest. Die fünf Kataloge suchen derzeit ausschließlich auf xHamster; der Eintrag „Weitere Dub-Suchtreffer“ ist ausdrücklich kein Plattformmix.
+
 ## Funktionen
 
 - Katalog-Feed über die öffentlich erreichbare xHamster-Startseite
@@ -25,9 +29,13 @@ Manifest lokal: `http://localhost:7000/manifest.json`
 
 ## Bereitstellung
 
-Das Addon muss auf einem öffentlich erreichbaren Node.js-Host betrieben werden. Als Startbefehl `npm start`, Arbeitsverzeichnis `addon`, Runtime Node 20+ und Port aus der Umgebungsvariable `PORT` verwenden. Danach in Nuvio unter **Addons** die URL `https://DEINE-DOMAIN/manifest.json` hinzufügen.
+Der vorhandene Render-Dienst verwendet das Verzeichnis `addon`, Node.js 20+ und `npm start`. Die Addon-URL für Nuvio lautet `https://cvn-xhamster-catalog.onrender.com/manifest.json`.
 
-Die GitHub-Repository-URL allein ist keine Addon-URL. Ein Deployment wurde noch nicht durchgeführt, da dafür Zugriff auf einen Hosting-Anbieter erforderlich ist.
+## Sprache und Plattformrechte
+
+Deutsche Suchbegriffe, Tags und Titel sind kein Beweis für eine deutsche Tonspur. Das Addon markiert solche Treffer daher nicht als technisch bestätigte Audiosprache. Eine HLS-Tonspur gilt nur dann als technisch deutsch gekennzeichnet, wenn die Playlist eine AUDIO-Rendition mit `LANGUAGE=de` ausweist. Das ersetzt keinen Hörtest.
+
+ThePornDude und andere Verzeichnisse verlinken unabhängige Anbieter; sie erteilen keine Rechte zur Übernahme ihrer Videos. Die recherchierten deutschsprachigen Portale haben bislang keine belastbare Kombination aus deutscher Tonspur, öffentlich spielbarem MP4/HLS und offizieller Nuvio-Einbettungsfreigabe geliefert. Sie werden deshalb nicht als angeblich funktionierende Quellen eingespeist.
 
 ## Einschränkungen
 
