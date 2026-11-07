@@ -110,7 +110,7 @@ function epVideoId(video) {
 }
 function epVideoUrl(video) {
   const url = String(video?.url || video?.link || "").trim();
-  if (/^https:\/\/(?:www\\.)?eporner\\.com\/(?:video-|hd-porn\/)/i.test(url)) return url;
+  if (/^https:\/\/(?:www\.)?eporner\.com\/(?:video-|hd-porn\/)/i.test(url)) return url;
   const id = epVideoId(video);
   return id ? EP_BASE + "/embed/" + encodeURIComponent(id) : "";
 }
@@ -211,6 +211,7 @@ async function epornerStreams(id) {
   xh_german_all: "German Dub"
 };
 async function catalog(args) {
+  const epMetas = await epornerCatalog(args.id, Math.max(0, Number(args.extra?.skip || 0)));
   const search = String(args.extra?.search || CATALOG_SEARCHES[args.id] || "").trim();
   const skip = Math.max(0, Number(args.extra?.skip || 0));
   if (!search) {
@@ -225,6 +226,10 @@ async function catalog(args) {
   return { metas: [...metas.filter(Boolean), ...epMetas], cacheMaxAge: 300 };
 }
 async function metadata(id) {
+  if (String(id || "").startsWith("ep:")) {
+    const meta = await epornerMetadata(id);
+    return { meta: meta || { id: String(id), type: "movie", name: "Eporner Video" } };
+  }
   const url = urlFromId(id);
   if (!url) {
     return { meta: { id: String(id || ""), type: "movie", name: "xHamster Video" } };
@@ -242,6 +247,7 @@ async function metadata(id) {
   };
 }
 async function streams(id) {
+  if (String(id || "").startsWith("ep:")) return { streams: await epornerStreams(id) };
   const url = urlFromId(id);
   if (!url) return { streams: [] };
   const html = await getHtml(url);
