@@ -1,0 +1,20 @@
+name: Validate provider
+
+on:
+  push:
+    branches: [add-xhamster-provider]
+  pull_request:
+    branches: [add-xhamster-provider]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Check JavaScript syntax
+        run: node --check providers/xhamster.js
+      - name: Validate manifest and provider contract
+        run: node tests/validate-provider.mjs
