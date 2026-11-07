@@ -1,12 +1,12 @@
 {
   "name": "CVN-xHamster Deutsch",
-  "version": "1.9.1",
+  "version": "1.9.2",
   "scrapers": [
     {
       "id": "xhamster",
       "name": "CVN-xHamster Deutsch",
       "description": "Deutsche xHamster-Videos",
-      "version": "1.9.1",
+      "version": "1.9.2",
       "author": "cufi12",
       "supportedTypes": [
         "movie",
