@@ -1,12 +1,17 @@
 // Apify-backed xHamster catalog adapter for the Stremio-compatible Nuvio addon.
-// Only public actor results and explicitly supplied direct media URLs are exposed.
-// The addon does not bypass logins, age checks, DRM, CAPTCHAs or anti-bot controls.
+// IDs are deterministic from the canonical public video page URL.
+// Playback is returned only after a bounded HTTP media-type probe succeeds.
 
 const ACTOR_URL = process.env.APIFY_ACTOR_URL ||
   "https://api.apify.com/v2/acts/scrapers_lat~xhamster-scraper/run-sync-get-dataset-items";
 const MAX_VIDEOS = Math.min(100, Math.max(1, Number(process.env.APIFY_MAX_VIDEOS || 40)));
 const SORTS = new Set(["relevance", "newest", "best"]);
 const ID_PREFIX = "xh:";
+const videoCache = new Map();
+const MEDIA_TYPES = [
+  "video/", "application/vnd.apple.mpegurl", "application/x-mpegurl",
+  "application/dash+xml", "application/mp4"
+];
 
 function first(item, keys) {
   for (const key of keys) {
@@ -22,15 +27,37 @@ function asText(value) {
   return "";
 }
 
-function pageUrlOf(item) {
-  const value = first(item, ["pageUrl", "pageURL", "videoPageUrl", "videoPage", "url", "link", "webUrl"]);
-  const text = asText(value);
+function canonicalPageUrl(value) {
   try {
-    const parsed = new URL(text);
-    return ["http:", "https:"].includes(parsed.protocol) ? parsed.toString() : "";
+    const url = new URL(asText(value));
+    if (!["http:", "https:"].includes(url.protocol)) return "";
+    url.hash = "";
+    return url.toString();
   } catch {
     return "";
   }
+}
+
+function pageUrlOf(item) {
+  return canonicalPageUrl(first(item, ["pageUrl", "pageURL", "videoPageUrl", "videoPage", "url", "link", "webUrl"]));
+}
+
+function directMediaCandidates(item) {
+  const candidates = [];
+  for (const key of ["directMediaUrl", "directUrl", "mediaUrl", "fileUrl", "downloadUrl"]) {
+    const value = asText(item?.[key]);
+    if (value) candidates.push(value);
+  }
+  if (Array.isArray(item?.sources)) {
+    for (const source of item.sources) {
+      const value = asText(typeof source === "string" ? source : source?.url);
+      if (value) candidates.push(value);
+    }
+  }
+  return [...new Set(candidates)].filter(value => {
+    try { return ["http:", "https:"].includes(new URL(value).protocol); }
+    catch { return false; }
+  });
 }
 
 function normalize(item) {
@@ -46,21 +73,22 @@ function normalize(item) {
     (typeof tagsValue === "string" ? tagsValue.split(/[,|]/).map(s => s.trim()).filter(Boolean) : []);
   const views = first(item, ["views", "viewCount"]);
   const date = asText(first(item, ["publishedAt", "uploadDate", "date", "createdAt"]));
-  return { title, pageUrl, poster, description, duration, creator, channel, tags, views, date, mediaUrls: directMediaUrls(item) };
+  return { title, pageUrl, poster, description, duration, creator, channel, tags, views, date, mediaCandidates: directMediaCandidates(item) };
 }
 
 function encodeId(item) {
-  const normalized = normalize(item);
-  return ID_PREFIX + Buffer.from(JSON.stringify(normalized)).toString("base64url");
+  const pageUrl = typeof item === "string" ? canonicalPageUrl(item) : normalize(item).pageUrl;
+  if (!pageUrl) return "";
+  return ID_PREFIX + Buffer.from(pageUrl, "utf8").toString("base64url");
 }
 
 function decodeId(id) {
   const value = String(id || "");
   if (!value.startsWith(ID_PREFIX)) return null;
   try {
-    const parsed = JSON.parse(Buffer.from(value.slice(ID_PREFIX.length), "base64url").toString("utf8"));
-    if (!parsed || typeof parsed !== "object" || !parsed.title) return null;
-    return parsed;
+    const pageUrl = canonicalPageUrl(Buffer.from(value.slice(ID_PREFIX.length), "base64url").toString("utf8"));
+    if (!pageUrl || encodeId(pageUrl) !== value) return null;
+    return { pageUrl };
   } catch {
     return null;
   }
@@ -69,12 +97,10 @@ function decodeId(id) {
 function actorInput(args = {}) {
   const filters = args.extra && typeof args.extra === "object" ? { ...args, ...args.extra } : args;
   const input = { maxVideos: MAX_VIDEOS, withDetails: true };
-  const sort = SORTS.has(String(filters.sort || "")) ? String(filters.sort) : "relevance";
-  input.sort = sort;
+  input.sort = SORTS.has(String(filters.sort || "")) ? String(filters.sort) : "relevance";
   const search = asText(filters.search);
   if (search) input.searchQuery = search.slice(0, 200);
-  const fields = ["category", "tag", "pornstar", "channel"];
-  for (const field of fields) {
+  for (const field of ["category", "tag", "pornstar", "channel"]) {
     const value = asText(filters[field]);
     if (value) input[field] = value.slice(0, 160);
   }
@@ -87,14 +113,9 @@ async function runActor(input) {
     console.warn("[xHamster] APIFY_TOKEN is not configured");
     return [];
   }
-  const url = new URL(ACTOR_URL);
-  const response = await fetch(url, {
+  const response = await fetch(new URL(ACTOR_URL), {
     method: "POST",
-    headers: {
-      "Authorization": "Bearer " + token,
-      "Content-Type": "application/json",
-      "Accept": "application/json"
-    },
+    headers: { "Authorization": "Bearer " + token, "Content-Type": "application/json", "Accept": "application/json" },
     body: JSON.stringify(input),
     signal: AbortSignal.timeout(180000)
   });
@@ -114,26 +135,19 @@ function catalogIds() {
 }
 
 async function catalog(args = {}) {
-  if (args.type !== "movie" || !catalogIds().has(String(args.id || ""))) {
-    return { metas: [], cacheMaxAge: 300 };
-  }
+  if (args.type !== "movie" || !catalogIds().has(String(args.id || ""))) return { metas: [], cacheMaxAge: 300 };
   const input = actorInput(args);
-  const idToField = {
-    xh_category: "category",
-    xh_tag: "tag",
-    xh_creator: "pornstar",
-    xh_channel: "channel"
-  };
+  const idToField = { xh_category: "category", xh_tag: "tag", xh_creator: "pornstar", xh_channel: "channel" };
   const field = idToField[args.id];
   if (field && !input[field]) return { metas: [], cacheMaxAge: 120 };
   const items = await runActor(input);
   const metas = items.map(item => {
     const video = normalize(item);
     if (!video.title || !video.pageUrl) return null;
+    const id = encodeId(video.pageUrl);
+    videoCache.set(id, video);
     return {
-      id: encodeId(item),
-      type: "movie",
-      name: video.title,
+      id, type: "movie", name: video.title,
       poster: video.poster || undefined,
       description: video.description || undefined,
       runtime: typeof video.duration === "number" ? String(Math.round(video.duration / 60)) + " min" : undefined,
@@ -144,14 +158,23 @@ async function catalog(args = {}) {
   return { metas, cacheMaxAge: 300 };
 }
 
+async function getVideo(id) {
+  const decoded = decodeId(id);
+  if (!decoded) return null;
+  if (videoCache.has(id)) return videoCache.get(id);
+  // Rehydrate after a process restart by asking the same Actor for this exact public page URL.
+  const items = await runActor({ maxVideos: MAX_VIDEOS, withDetails: true, searchQuery: decoded.pageUrl, sort: "relevance" });
+  const match = items.map(normalize).find(video => video.pageUrl === decoded.pageUrl);
+  if (match) videoCache.set(id, match);
+  return match || null;
+}
+
 async function metadata(id) {
-  const video = decodeId(id);
+  const video = await getVideo(id);
   if (!video) return { meta: null };
   return {
     meta: {
-      id: String(id),
-      type: "movie",
-      name: video.title,
+      id: String(id), type: "movie", name: video.title,
       poster: video.poster || undefined,
       description: video.description || undefined,
       runtime: typeof video.duration === "number" ? String(Math.round(video.duration / 60)) + " min" : undefined,
@@ -164,39 +187,59 @@ async function metadata(id) {
   };
 }
 
-function directMediaUrls(item) {
-  const candidates = [];
-  for (const key of ["directMediaUrl", "directUrl", "mediaUrl", "fileUrl", "downloadUrl"]) {
-    const value = asText(item?.[key]);
-    if (value) candidates.push(value);
-  }
-  if (Array.isArray(item?.sources)) {
-    for (const source of item.sources) {
-      const value = asText(typeof source === "string" ? source : source?.url);
-      if (value) candidates.push(value);
-    }
-  }
-  return [...new Set(candidates)].filter(value => {
+function isMediaType(value) {
+  const type = String(value || "").split(";")[0].trim().toLowerCase();
+  return MEDIA_TYPES.some(prefix => prefix.endsWith("/") ? type.startsWith(prefix) : type === prefix);
+}
+
+async function verifyMediaUrl(candidate) {
+  let url;
+  try {
+    url = new URL(candidate);
+    if (!["http:", "https:"].includes(url.protocol)) return null;
+  } catch { return null; }
+
+  // HEAD first; fall back to a one-byte range request for hosts that reject HEAD.
+  for (const method of ["HEAD", "GET"]) {
     try {
-      const url = new URL(value);
-      return ["http:", "https:"].includes(url.protocol) &&
-        /\.(mp4|m4v|mov|webm|m3u8|mpd)(?:$|[?#])/i.test(url.href);
+      const response = await fetch(url, {
+        method,
+        headers: method === "GET" ? { Range: "bytes=0-0" } : {},
+        redirect: "follow",
+        signal: AbortSignal.timeout(10000)
+      });
+      const validStatus = response.ok || (method === "GET" && response.status === 206);
+      const validType = isMediaType(response.headers.get("content-type"));
+      const finalUrl = response.url || url.toString();
+      if (validStatus && validType && ["http:", "https:"].includes(new URL(finalUrl).protocol)) {
+        if (method === "GET") response.body?.cancel?.().catch?.(() => {});
+        return finalUrl;
+      }
+      if (method === "GET") response.body?.cancel?.().catch?.(() => {});
+      if (method === "HEAD" && response.status >= 400) continue;
+      if (method === "HEAD" && !validType) continue;
     } catch {
-      return false;
+      // Try the bounded range request if HEAD is unsupported or unavailable.
     }
-  });
+  }
+  return null;
 }
 
 async function streams(id) {
-  const video = decodeId(id);
-  if (!video || !Array.isArray(video.mediaUrls)) return { streams: [] };
+  const video = await getVideo(id);
+  if (!video || !Array.isArray(video.mediaCandidates)) return { streams: [] };
+  const verified = [];
+  for (const candidate of video.mediaCandidates.slice(0, 4)) {
+    const url = await verifyMediaUrl(candidate);
+    if (url && !verified.includes(url)) verified.push(url);
+  }
   return {
-    streams: video.mediaUrls.map((url, index) => ({
-      name: "Apify direct media",
-      title: video.title + (video.mediaUrls.length > 1 ? " · Quelle " + (index + 1) : ""),
+    streams: verified.map((url, index) => ({
+      name: "Apify verified direct media",
+      title: video.title + (verified.length > 1 ? " · Quelle " + (index + 1) : ""),
       url
     }))
   };
 }
 
-module.exports = { catalog, metadata, streams, normalize, encodeId, decodeId, actorInput, directMediaUrls };
+module.exports = { catalog, metadata, streams, normalize, encodeId, decodeId, actorInput, directMediaCandidates, verifyMediaUrl };
