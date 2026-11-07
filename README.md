@@ -12,7 +12,7 @@ In Nuvio bzw. einer kompatiblen Nuvio-basierten App als Plugin-Manifest hinzufü
 
 ## Aktueller Stand
 
-Aktuelle Version: **1.9.5**
+Aktuelle Version: **1.9.6**
 
 - Unterstützt die Nuvio-Plugin-Schnittstelle `getStreams(tmdbId, mediaType)`.
 - Sucht derzeit nur bei Filmen bzw. `other`; Serien werden nicht unterstützt.
@@ -32,7 +32,7 @@ Der Provider umgeht keine Anmeldung, Altersprüfung, CAPTCHA-, DRM- oder Anti-Bo
 
 ## Automatische Prüfungen
 
-GitHub Actions prüft bei Änderungen auf diesem Branch die JavaScript-Syntax, das Manifest und den Provider-Vertrag. Zusätzlich simuliert ein Laufzeittest eine TMDB-Antwort, eine passende Videoseite, einen HLS-Stream und den Fall eines fehlenden API-Schlüssels. Diese Tests ersetzen keinen echten Wiedergabetest innerhalb der Nuvio-App.
+GitHub Actions prüft bei Änderungen auf diesem Branch die JavaScript-Syntax, das Manifest und den Provider-Vertrag. Zusätzlich simuliert ein Laufzeittest eine TMDB-Antwort, eine passende Videoseite, einen HLS-Stream, die Ablehnung nicht passender Titel, nicht unterstützte Serien und den Fall eines fehlenden API-Schlüssels. Diese Tests ersetzen keinen echten Wiedergabetest innerhalb der Nuvio-App.
 
 ## Entwicklung
 
@@ -43,4 +43,4 @@ Aktiver Provider: `providers/xhamster.js`
 
 ## Sicherheitshinweis
 
-Ein früher im Quellcode enthaltener TMDB-Schlüssel gilt als offengelegt. Bitte diesen Schlüssel im TMDB-Konto widerrufen bzw. ersetzen. Version 1.9.5 enthält keinen fest eingebauten TMDB-Schlüssel; der neue Schlüssel wird über die geschützte Provider-Einstellung `tmdbApiKey` eingegeben.
+Ein früher im Quellcode enthaltener TMDB-Schlüssel gilt als offengelegt. Bitte diesen Schlüssel im TMDB-Konto widerrufen bzw. ersetzen. Version 1.9.6 enthält keinen fest eingebauten TMDB-Schlüssel; der neue Schlüssel wird über die geschützte Provider-Einstellung `tmdbApiKey` eingegeben.
