@@ -529,8 +529,9 @@ async function catalog(args) {
   const hasGermanMarker = meta => meta?.audioLanguage === "de" ||
     meta?.germanLanguageMarker === true || meta?.germanDubMarker === true;
 
-  const xhMetas = await (async () => {
-    try {
+  // Each source is isolated: one provider outage must not blank the whole catalog.
+  const [xhResult, epResult, aeResult] = await Promise.allSettled([
+    (async () => {
       const links = await searchVideoLinks(queries);
       const metas = await Promise.all(links.slice(0, 100).map(pageMeta));
       return metas.filter(meta => {
@@ -542,20 +543,30 @@ async function catalog(args) {
         if (args.id === "xh_german_all" || args.id === "xh_free_german_platforms") return hasGermanAudioEvidence(meta);
         return true;
       });
-    } catch (error) {
-      console.warn("[CVN catalog] xHamster unavailable:", error?.message || error);
-      return [];
-    }
-  })();
-
-  const seen = new Set();
+    })(),
+    epornerCatalog(args.id, 0),
+    adultEmbedCatalog(args.id, 0)
+  ]);
+  const sources = [
+    ["xHamster", xhResult],
+    ["Eporner", epResult],
+    ["AdultEmbed", aeResult]
+  ];
   const merged = [];
-  for (const meta of xhMetas) {
-    if (!meta?.id || seen.has(meta.id)) continue;
-    seen.add(meta.id);
-    META_CACHE.set(String(meta.id), meta);
-    if (META_CACHE.size > 2000) META_CACHE.delete(META_CACHE.keys().next().value);
-    merged.push(meta);
+  const seen = new Set();
+  for (const [source, result] of sources) {
+    if (result.status !== "fulfilled") {
+      console.warn("[CVN catalog] source unavailable:", source, result.reason?.message || result.reason);
+      continue;
+    }
+    for (const original of (Array.isArray(result.value) ? result.value : [])) {
+      if (!original?.id || seen.has(original.id)) continue;
+      seen.add(original.id);
+      const meta = { ...original, description: [source, original.description].filter(Boolean).join(" · ") };
+      META_CACHE.set(String(meta.id), meta);
+      if (META_CACHE.size > 2000) META_CACHE.delete(META_CACHE.keys().next().value);
+      merged.push(meta);
+    }
   }
   return { metas: merged.slice(skip, skip + 40), cacheMaxAge: queries.length ? 300 : 900 };
 }
