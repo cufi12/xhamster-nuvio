@@ -29,7 +29,8 @@ Die Menübezeichnungen können je nach App-Version leicht abweichen. Nicht jede 
 
 ## Aktueller Stand des Providers
 
-Aktuelle Version: **2.0.0**
+Aktuelle Provider-Version: **2.0.0**  
+Aktuelle Katalog-Server-Version: **0.2.0**
 
 - Unterstützt die Nuvio-Plugin-Schnittstelle `getStreams(tmdbId, mediaType)`.
 - Unterstützt ausschließlich Filme. `other` wird von NuvioMobile intern als `tv` normalisiert und deshalb bewusst nicht als unterstützter Typ deklariert.
