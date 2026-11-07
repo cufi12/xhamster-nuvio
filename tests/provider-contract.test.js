@@ -39,10 +39,14 @@ const ids = new Set();
 
     const invalid = await provider.getStreams(null, "unknown", null, null);
     assert.deepEqual(invalid, [], spec.id + " must safely reject invalid input");
+    const emptyId = await provider.getStreams("   ", "movie", null, null);
+    assert.deepEqual(emptyId, [], spec.id + " must reject an empty TMDB id");
 
     if (spec.id === "cvn-hentai-german-dub") {
       const series = await provider.getStreams("123", "tv", 1, 1);
       assert.deepEqual(series, [], "Hentai provider must accept the Nuvio tv media type");
+      const legacySeries = await provider.getStreams("123", "series", 1, 1);
+      assert.deepEqual(legacySeries, [], "Hentai provider must accept the Nuvio series media type");
     }
   }
 
