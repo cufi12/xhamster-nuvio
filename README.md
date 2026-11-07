@@ -12,13 +12,13 @@ In Nuvio bzw. einer kompatiblen Nuvio-basierten App als Plugin-Manifest hinzufü
 
 ## Aktueller Stand
 
-Aktuelle Version: **1.9.1**
+Aktuelle Version: **1.9.2**
 
 - Unterstützt die Nuvio-Plugin-Schnittstelle `getStreams(tmdbId, mediaType)`.
 - Sucht derzeit nur bei Filmen bzw. `other`; Serien werden nicht unterstützt.
 - Bevorzugt HLS-Streams (`.m3u8`).
 - Verwendet TMDB-Metadaten zur Titelauflösung und berücksichtigt einen bekannten Alternativtitel.
-- Normalisiert Umlaute und Sonderzeichen bei Titelvergleichen und verlangt bei längeren Titeln eine Mindestübereinstimmung, um zufällige Treffer zu reduzieren.
+- Normalisiert Umlaute, Unicode-Zeichen und Leerzeichen bei Titelvergleichen korrekt und verlangt bei längeren Titeln eine Mindestübereinstimmung, um zufällige Treffer zu reduzieren.
 - Gibt keine Treffer zurück, wenn Metadaten oder passende Stream-Informationen nicht verfügbar sind.
 
 ## Wichtige Einschränkungen
