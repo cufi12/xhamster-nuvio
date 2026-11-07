@@ -30,6 +30,10 @@ Titelähnlichkeit allein kann **nicht zuverlässig** belegen, dass ein Treffer e
 
 Der Provider umgeht keine Anmeldung, Altersprüfung, CAPTCHA-, DRM- oder Anti-Bot-Schutzmechanismen. Verfügbarkeit und Wiedergabe hängen von xHamster, Nuvio und den jeweils geltenden Zugriffsbedingungen ab.
 
+## Automatische Prüfungen
+
+GitHub Actions prüft bei Änderungen auf diesem Branch die JavaScript-Syntax sowie grundlegende Manifest- und Provider-Verträge. Diese statischen Prüfungen ersetzen keinen Wiedergabetest innerhalb der Nuvio-App.
+
 ## Entwicklung
 
 Aktiver Provider: `providers/xhamster.js`
