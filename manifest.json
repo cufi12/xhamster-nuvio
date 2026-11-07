@@ -6,7 +6,7 @@
       "id": "xhamster",
       "name": "CVN-xHamster Deutsch",
       "description": "Experimenteller xHamster-Provider; deutsche Sprache nicht verifiziert",
-      "version": "1.9.8",
+      "version": "1.9.9",
       "author": "cufi12",
       "supportedTypes": [
         "movie"
