@@ -205,12 +205,10 @@ async function adultEmbedMetadata(id) {
 async function adultEmbedStreams(id) {
   const videoId = aeIdFromId(id);
   if (!videoId) return [];
-  const meta = await adultEmbedMetadata(id);
-  const playerUrl = meta?.url || (AE_BASE + "/player/embed/" + encodeURIComponent(videoId) + "/");
-  // AdultEmbed exposes an iframe player, not a direct media file. In the
-  // Stremio protocol this must be an externalUrl, otherwise clients try to
-  // feed an HTML page to the video decoder and show a playback error.
-  return [{ name: "CVN AdultEmbed – im Browser öffnen", title: meta?.name || "AdultEmbed", externalUrl: playerUrl }];
+  // AdultEmbed currently exposes only an iframe page, not a verified direct
+  // media URL. Do not redirect Nuvio to the provider's website; return no
+  // stream until a native-player-compatible media source is available.
+  return [];
 }
 
 function epIdFromId(id) {
@@ -319,14 +317,9 @@ async function epornerStreams(id) {
       ...( /\.m3u8(?:$|[?#])/i.test(url) ? { behaviorHints: { notWebReady: true } } : {})
     }));
   }
-  // If the API has no direct media URL, open the provider's public video page
-  // rather than returning an empty/invalid stream.
-  const pageUrl = epVideoUrl(video);
-  return pageUrl ? [{
-    name: "CVN Eporner – im Browser öffnen",
-    title: video.title || "Eporner",
-    externalUrl: pageUrl
-  }] : [];
+  // No direct media URL means no native-player stream. Never send Nuvio
+  // to the provider website as a fallback.
+  return [];
 }
 
 const CATALOG_SEARCHES = {
@@ -474,13 +467,9 @@ async function streams(id) {
   const urls = unique(candidates);
   const title = metaTag(html, "og:title") || "xHamster";
   if (!urls.length) {
-    return {
-      streams: [{
-        name: "CVN xHamster – im Browser öffnen",
-        title,
-        externalUrl: url
-      }]
-    };
+    // The page itself is not a playable stream. Keep playback inside Nuvio
+    // by returning an empty stream list instead of an external browser link.
+    return { streams: [] };
   }
   return {
     streams: urls.slice(0, 5).map(u => ({
