@@ -47,7 +47,7 @@ globalThis.fetch = async (url) => {
   if (requested.startsWith("https://ge.xhamster.com/search/")) {
     return {
       ok: true,
-      text: async () => '<a href="https://ge.xhamster.com/videos/test-film-123">Test Film</a>'
+      text: async () => '<a href="https://ge.xhamster.com/videos/test-film-123">Test Film</a><a href="https://ge.xhamster.com/videos/unrelated-456">Unrelated</a>'
     };
   }
 
@@ -55,6 +55,13 @@ globalThis.fetch = async (url) => {
     return {
       ok: true,
       text: async () => '<meta property="og:title" content="Test Film"><script>{"contentUrl":"https://cdn.example.test/video.m3u8"}</script>'
+    };
+  }
+
+  if (requested === "https://ge.xhamster.com/videos/unrelated-456") {
+    return {
+      ok: true,
+      text: async () => '<meta property="og:title" content="Completely Unrelated"><script>{"contentUrl":"https://cdn.example.test/unrelated.m3u8"}</script>'
     };
   }
 
@@ -69,6 +76,10 @@ try {
   assert.equal(streams[0].title, "Test Film");
   assert.equal(streams[0].url, "https://cdn.example.test/video.m3u8");
   assert.equal(streams[0].quality, "HLS");
+  assert.ok(!streams.some((stream) => stream.title === "Completely Unrelated"),
+    "A page with a non-matching title must be rejected.");
+  assert.deepEqual(await provider.getStreams("12345", "tv"), [],
+    "Unsupported series type must return no streams.");
   assert.ok(requestedUrls.some((url) => url.includes("api_key=test-key-only")),
     "TMDB request must use the configured key.");
 
