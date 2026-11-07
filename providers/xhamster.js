@@ -76,7 +76,7 @@ function metadataFromImdbId(imdbId) {
   if (!apiKey) return Promise.reject(new Error("TMDB API key is not configured in provider settings"));
   var findUrl = "https://api.themoviedb.org/3/find/" +
     encodeURIComponent(imdbId) +
-    "?external_source=imdb_id&api_key=" + encodeURIComponent(TMDB_API_KEY) +
+    "?external_source=imdb_id&api_key=" + encodeURIComponent(apiKey) +
     "&language=de-DE";
 
   return requestJson(findUrl).then(function (data) {
