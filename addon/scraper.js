@@ -34,7 +34,7 @@ function nextSearchPage(html, currentUrl) {
   while ((match = anchors.exec(html)) !== null) {
     const attrs = match[1] + " " + match[3];
     const label = textFromHtml(match[4]).toLowerCase();
-    if (!/rel=["']next["']|aria-label=["'][^"']*next|class=["'][^"']*(?:next|pagination)/i.test(attrs) &&
+    if (!/rel=["']next["']|aria-label=["'][^"']*next|class=["'][^"']*next/i.test(attrs) &&
         !/^(?:next|›|»|→)$/.test(label)) continue;
     try {
       const candidate = new URL(absolute(match[2]) || match[2], currentUrl);
@@ -115,7 +115,7 @@ async function catalog(args) {
     return { metas: metas.filter(Boolean), cacheMaxAge: 900 };
   }
   const links = await searchVideoLinks(search);
-  const metas = await Promise.all(links.slice(skip, skip + 20).map(pageMeta));
+  const metas = await Promise.all(links.slice(skip, skip + 40).map(pageMeta));
   return { metas: metas.filter(Boolean), cacheMaxAge: 300 };
 }
 async function metadata(id) {
