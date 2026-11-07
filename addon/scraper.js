@@ -29,12 +29,12 @@ function videoLinks(html) {
 }
 
 function nextSearchPage(html, currentUrl) {
-  const anchors = /<a\\b([^>]*?)href=[\\"']([^\\"']+)[\\"']([^>]*)>([\\s\\S]*?)<\\/a>/gi;
+  const anchors = /<a\b([^>]*?)href=["']([^"']+)["']([^>]*)>([\s\S]*?)<\/a>/gi;
   let match;
   while ((match = anchors.exec(html)) !== null) {
     const attrs = match[1] + " " + match[3];
     const label = textFromHtml(match[4]).toLowerCase();
-    if (!/rel=[\\"']next[\\"']|aria-label=[\\"'][^\\"']*next|class=[\\"'][^\\"']*(?:next|pagination)/i.test(attrs) &&
+    if (!/rel=["']next["']|aria-label=["'][^"']*next|class=["'][^"']*(?:next|pagination)/i.test(attrs) &&
         !/^(?:next|›|»|→)$/.test(label)) continue;
     try {
       const candidate = new URL(absolute(match[2]) || match[2], currentUrl);
