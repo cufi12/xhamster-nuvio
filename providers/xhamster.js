@@ -104,8 +104,18 @@ function metadataFromImdbId(imdbId) {
 function resolveMovieMetadata(id, mediaType) {
   var rawId = String(id || "");
   var imdbMatch = rawId.match(/tt\d{7,}/i);
-  if (imdbMatch) return metadataFromImdbId(imdbMatch[0]);
 
+  // Known IMDb ID supplied for this movie. This fallback also works if
+  // Nuvio passes the IMDb ID directly or TMDB metadata lookup is unavailable.
+  if (imdbMatch && imdbMatch[0].toLowerCase() === "tt32873815") {
+    return Promise.resolve({
+      title: "Barbi in the imperfect world",
+      originalTitle: "Barbi in the imperfect world",
+      year: "2023"
+    });
+  }
+
+  if (imdbMatch) return metadataFromImdbId(imdbMatch[0]);
   return metadataFromTmdbId(rawId, mediaType);
 }
 
@@ -141,12 +151,14 @@ function extractMedia(html, pageUrl) {
     }
   });
 
-  // Prefer HLS playlists: they are generally more resilient for segmented
-  // playback than a direct MP4 URL. Keep MP4 links as a fallback.
-  return unique(candidates).sort(function (a, b) {
-    var aHls = /\.m3u8(?:[?#]|$)/i.test(a) ? 1 : 0;
-    var bHls = /\.m3u8(?:[?#]|$)/i.test(b) ? 1 : 0;
-    return bHls - aHls;
+  // Prefer HLS exclusively whenever a playlist is exposed. Return MP4
+  // only when the page does not expose any HLS playlist.
+  var uniqueCandidates = unique(candidates);
+  var hlsCandidates = uniqueCandidates.filter(function (url) {
+    return /\.m3u8(?:[?#]|$)/i.test(url);
+  });
+  return hlsCandidates.length ? hlsCandidates : uniqueCandidates.filter(function (url) {
+    return /\.mp4(?:[?#]|$)/i.test(url);
   });
 }
 
