@@ -5,7 +5,6 @@ const AE_API = "https://adultembed.com/api/v1";
 const AE_BASE = "https://adultembed.com";
 
 const META_CACHE = new Map();
-const META_CACHE_LIMIT = 2000;
 
 const VIDEO_RE = /^https:\/\/(?:[a-z0-9-]+\.)*xhamster\.com\/videos?\//i;
 
@@ -374,6 +373,10 @@ async function catalog(args) {
     // Keep the exact catalog preview in memory so the subsequent detail
     // request does not depend on a second, potentially throttled provider call.
     META_CACHE.set(String(meta.id), meta);
+    if (META_CACHE.size > 2000) {
+      const oldest = META_CACHE.keys().next().value;
+      META_CACHE.delete(oldest);
+    }
     merged.push(meta);
   }
   return { metas: merged.slice(skip, skip + 40), cacheMaxAge: search ? 300 : 900 };
