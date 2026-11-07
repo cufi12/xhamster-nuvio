@@ -1,6 +1,6 @@
 # CVN Gratis-Katalog für Nuvio
 
-Dieses Repository ist für **Nuvio JavaScript-Plugin-Repositories** bestimmt, nicht für Stremio-Add-ons.
+Dieses Repository ist für die **Nuvio-Provider-Liste** bestimmt, nicht für Stremio-Add-ons.
 
 ## Installation
 
@@ -20,7 +20,7 @@ Der Eintrag **xHamster** ist ein eigener Nuvio-Provider (kein Katalog-Addon in N
 - Der Apify-Token bleibt ausschließlich als serverseitige Render-Umgebungsvariable gespeichert und wird nicht an Nuvio ausgeliefert.
 - Es werden nur vom Backend als direkte Medien-URLs bestätigte Streams zurückgegeben. Keine Umgehung von Logins, Altersprüfungen, CAPTCHAs, DRM, Paywalls oder Anti-Bot-Schutz.
 
-**Wichtig:** Die technische Erreichbarkeit oder ein direkter Stream-Nachweis ist kein Nachweis für Verbreitungsrechte. Bitte nur Inhalte nutzen, für die du zur Wiedergabe berechtigt bist. Ein echter Nuvio-Plugin- und Wiedergabetest steht noch aus.
+**Wichtig:** Die technische Erreichbarkeit oder ein direkter Stream-Nachweis ist kein Nachweis für Verbreitungsrechte. Bitte nur Inhalte nutzen, für die du zur Wiedergabe berechtigt bist. Ein echter Nuvio-Provider- und Wiedergabetest steht noch aus.
 
 ### Weitere geplante Kategorien
 
@@ -34,7 +34,7 @@ Diese drei Provider sind weiterhin deaktiviert, bis kostenlose und autorisierte 
 
 Das Manifest entspricht dem Nuvio-Plugin-Repositorymodell (PluginManifest) mit name, version und einem scrapers-Array. Nuvio ruft getStreams(tmdbId, mediaType, season, episode) auf und erwartet ein Array von Stream-Objekten (title, url, optional name, quality, language, headers). Die Provider laufen lokal in Nuvios JavaScript-Runtime; der xHamster-Provider greift für Suche und Stream-Prüfung auf den verbundenen Backend-Dienst zu.
 
-Der xHamster-Eintrag ist im Manifest aktiviert, benötigt aber einen TMDB API Key in seinen Provider-Einstellungen. Die drei anderen Provider-Dateien sind Platzhalter und liefern keine Streams; sie bleiben deaktiviert. Ein lokaler Vertragstest ersetzt weder den Nuvio-Plugin-Tester noch einen echten Wiedergabetest.
+Der xHamster-Eintrag ist im Manifest aktiviert, benötigt aber einen TMDB API Key in seinen Provider-Einstellungen. Die drei anderen Provider-Dateien sind Platzhalter und liefern keine Streams; sie bleiben deaktiviert. Ein lokaler Vertragstest ersetzt weder den Nuvio-Provider-Tester noch einen echten Wiedergabetest.
 
 ## Tests
 
