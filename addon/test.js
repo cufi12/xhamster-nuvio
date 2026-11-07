@@ -5,6 +5,7 @@ const page = "https://ge.xhamster.com/videos/sample-123";
 const html = {
   "https://ge.xhamster.com/search/sample": '<a href="/videos/sample-123">Sample Clip</a>',
   "https://ge.xhamster.com/search/German%20Dub": '<a href="/videos/sample-123">German Dub Sample</a>',
+  "https://ge.xhamster.com/search/Mario%20Salieri%20German%20Dub": '<a href="/videos/sample-123">Mario Salieri German Dub Sample</a>',
   [page]: '<meta property="og:title" content="Sample Clip"><meta property="og:image" content="https://cdn.example.test/poster.jpg"><meta property="og:description" content="Test description"><script id="initials-script">{"xplayerSettings":{"sources":{"hls":{"h264":[{"url":"https://cdn.example.test/video.m3u8"}]}}}}</script><script>{"contentUrl":"https://cdn.example.test/video.m3u8"}</script>'
 };
 global.fetch = async url => ({
@@ -20,6 +21,8 @@ global.fetch = async url => ({
 
   const germanDub = await scraper.catalog({ type: "movie", id: "xh_german_dub" });
   assert.equal(germanDub.metas.length, 1);
+  const salieriDub = await scraper.catalog({ type: "movie", id: "xh_mario_salieri_german_dub" });
+  assert.equal(salieriDub.metas.length, 1);
   const germanStudio = await scraper.catalog({ type: "movie", id: "xh_german_studio" });
   assert.deepEqual(germanStudio.metas, []);
   assert.equal(scraper.urlFromId(result.metas[0].id), page);
