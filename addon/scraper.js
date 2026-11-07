@@ -120,9 +120,20 @@ async function catalog(args) {
 }
 async function metadata(id) {
   const url = urlFromId(id);
-  if (!url) return { meta: {} };
+  if (!url) {
+    return { meta: { id: String(id || ""), type: "movie", name: "xHamster Video" } };
+  }
   const meta = await pageMeta(url);
-  return { meta: meta || {} };
+  // Always return a usable metadata object if the public page temporarily
+  // withholds its OG tags or cannot be fetched. Nuvio expects $meta to exist.
+  return {
+    meta: meta || {
+      id: makeId(url),
+      type: "movie",
+      name: "xHamster Video",
+      url
+    }
+  };
 }
 async function streams(id) {
   const url = urlFromId(id);
