@@ -203,7 +203,8 @@ async function epornerStreams(id) {
   return unique(urls.filter(url => /^https:\/\//i.test(url) && /\.(?:mp4|m3u8)(?:$|[?#])/i.test(url)))
     .slice(0, 5).map(url => ({ name: "CVN Eporner", title: video.title || "Eporner", url }));
 }
-\nconst CATALOG_SEARCHES = {
+
+const CATALOG_SEARCHES = {
   // Search phrases are public-site queries; they do not guarantee language or studio metadata.
   xh_german_studio: "German",
   xh_hentai_german_dub: "Hentai German Dub",
