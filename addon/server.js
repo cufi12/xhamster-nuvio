@@ -10,6 +10,10 @@ const manifest = {
   types: ["movie"],
   idPrefixes: ["xh:"],
   catalogs: [
+    { type: "movie", id: "xh_german_studio", name: "Deutsch – Studio-Produktionen" },
+    { type: "movie", id: "xh_german_dub", name: "Deutsch – German Dub" },
+    { type: "movie", id: "xh_german_new", name: "Deutsch – Neue Videos" },
+    { type: "movie", id: "xh_german_popular", name: "Deutsch – Beliebt" },
     { type: "movie", id: "xh_latest", name: "xHamster – Neu" },
     { type: "movie", id: "xh_search", name: "xHamster – Suche", extra: [{ name: "search", isRequired: true }] }
   ],
@@ -18,7 +22,7 @@ const manifest = {
 
 const builder = new addonBuilder(manifest);
 builder.defineCatalogHandler(args => {
-  if (args.type !== "movie" || !["xh_latest", "xh_search"].includes(args.id)) return Promise.resolve({ metas: [] });
+  if (args.type !== "movie" || !manifest.catalogs.some(catalog => catalog.id === args.id)) return Promise.resolve({ metas: [] });
   return scraper.catalog(args);
 });
 builder.defineMetaHandler(args => scraper.metadata(args.id));
