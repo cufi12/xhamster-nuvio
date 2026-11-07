@@ -90,14 +90,61 @@ async function streams(id) {
   const url = urlFromId(id);
   if (!url) return { streams: [] };
   const html = await getHtml(url);
+  if (!html) return { streams: [] };
+
   const candidates = [];
+  const addCandidate = value => {
+    if (typeof value !== "string") return;
+    const candidate = absolute(value);
+    // Only use ordinary, directly exposed HTTPS media URLs. Do not decode
+    // obfuscated player payloads or work around access restrictions.
+    if (/^https:\/\//i.test(candidate) && /\.(?:m3u8|mp4)(?:$|[?#])/i.test(candidate)) {
+      candidates.push(candidate);
+    }
+  };
+
+  // Current xHamster pages expose player configuration in initials-script.
+  // Accept only URLs already present in clear text in that public JSON.
+  const initialsMatch = html.match(/<script[^>]+id=["']initials-script["'][^>]*>([\s\S]*?)<\/script>/i);
+  if (initialsMatch) {
+    try {
+      const initials = JSON.parse(initialsMatch[1].trim());
+      const sources = initials?.xplayerSettings?.sources;
+      if (sources && typeof sources === "object") {
+        for (const group of [sources.hls, sources.standard]) {
+          if (!group || typeof group !== "object") continue;
+          for (const entries of Object.values(group)) {
+            for (const entry of Array.isArray(entries) ? entries : [entries]) {
+              if (!entry || typeof entry !== "object") continue;
+              addCandidate(entry.url);
+              addCandidate(entry.fallback);
+            }
+          }
+        }
+      }
+    } catch (_) {
+      // A malformed or non-JSON player payload is not a playable source.
+    }
+  }
+
+  // Fallback for pages that publish direct media URLs in markup or JSON.
   const patterns = [
-    /["'](?:contentUrl|src|file|videoUrl|url)["']\s*:\s*["']([^"']+\.m3u8(?:\?[^"']*)?)["']/gi,
-    /<(?:source|video)[^>]+(?:src|data-src)\s*=\s*["']([^"']+\.m3u8(?:\?[^"']*)?)["']/gi
+    /["'](?:contentUrl|src|file|videoUrl|url)["']\s*:\s*["']([^"']+\.(?:m3u8|mp4)(?:\?[^"']*)?)["']/gi,
+    /<(?:source|video)[^>]+(?:src|data-src)\s*=\s*["']([^"']+\.(?:m3u8|mp4)(?:\?[^"']*)?)["']/gi
   ];
-  for (const re of patterns) { let m; while ((m = re.exec(html)) !== null) candidates.push(decode(m[1])); }
-  const urls = unique(candidates).filter(u => /^https:\/\//i.test(u));
+  for (const re of patterns) {
+    let match;
+    while ((match = re.exec(html)) !== null) addCandidate(decode(match[1]));
+  }
+
+  const urls = unique(candidates);
   const title = metaTag(html, "og:title") || "xHamster";
-  return { streams: urls.slice(0, 5).map(u => ({ name: "CVN xHamster", title, url: u })) };
+  return {
+    streams: urls.slice(0, 5).map(u => ({
+      name: "CVN xHamster",
+      title,
+      url: u
+    }))
+  };
 }
 module.exports = { catalog, metadata, streams, videoLinks, urlFromId };
