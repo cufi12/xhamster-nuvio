@@ -21,3 +21,67 @@ assert.deepEqual(manifest.scrapers?.[0]?.supportedTypes, ["movie", "other"]);
 
 
 console.log("Provider manifest and static contract checks passed.");
+
+import { createRequire } from "node:module";
+
+const require = createRequire(import.meta.url);
+globalThis.SCRAPER_SETTINGS = { tmdbApiKey: "test-key-only" };
+
+const originalFetch = globalThis.fetch;
+const requestedUrls = [];
+globalThis.fetch = async (url) => {
+  const requested = String(url);
+  requestedUrls.push(requested);
+
+  if (requested.startsWith("https://api.themoviedb.org/3/movie/")) {
+    return {
+      ok: true,
+      json: async () => ({
+        title: "Test Film",
+        original_title: "Test Film",
+        release_date: "2020-05-01"
+      })
+    };
+  }
+
+  if (requested.startsWith("https://ge.xhamster.com/search/")) {
+    return {
+      ok: true,
+      text: async () => '<a href="https://ge.xhamster.com/videos/test-film-123">Test Film</a>'
+    };
+  }
+
+  if (requested === "https://ge.xhamster.com/videos/test-film-123") {
+    return {
+      ok: true,
+      text: async () => '<meta property="og:title" content="Test Film"><script>{"contentUrl":"https://cdn.example.test/video.m3u8"}</script>'
+    };
+  }
+
+  throw new Error("Unexpected test request: " + requested);
+};
+
+try {
+  const provider = require("../providers/xhamster.js");
+  const streams = await provider.getStreams("12345", "movie");
+
+  assert.equal(streams.length, 1, "One matching HLS stream should be returned.");
+  assert.equal(streams[0].title, "Test Film");
+  assert.equal(streams[0].url, "https://cdn.example.test/video.m3u8");
+  assert.equal(streams[0].quality, "HLS");
+  assert.ok(requestedUrls.some((url) => url.includes("api_key=test-key-only")),
+    "TMDB request must use the configured key.");
+
+  globalThis.SCRAPER_SETTINGS = {};
+  const beforeMissingKey = requestedUrls.length;
+  const noKeyStreams = await provider.getStreams("12345", "movie");
+  assert.deepEqual(noKeyStreams, [], "Missing API key should safely return no streams.");
+  assert.equal(requestedUrls.length, beforeMissingKey,
+    "No network request should be made when the API key is missing.");
+
+  console.log("Provider mocked runtime checks passed.");
+} finally {
+  globalThis.fetch = originalFetch;
+  delete globalThis.SCRAPER_SETTINGS;
+}
+
