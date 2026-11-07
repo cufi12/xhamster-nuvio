@@ -213,7 +213,7 @@ function fetchMatchingPage(pageUrl, movieTitle) {
 }
 
 function getStreams(tmdbId, mediaType) {
-  if (mediaType && mediaType !== "movie") return Promise.resolve([]);
+  if (mediaType && mediaType !== "movie" && mediaType !== "other") return Promise.resolve([]);
   if (tmdbId == null) return Promise.resolve([]);
 
   return resolveMovieMetadata(tmdbId, mediaType)
