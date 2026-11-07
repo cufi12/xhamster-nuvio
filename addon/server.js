@@ -3,7 +3,7 @@ const scraper = require("./scraper");
 
 const manifest = {
   id: "community.cvn.xhamster.catalog",
-  version: "0.1.8",
+  version: "0.1.9",
   name: "CVN xHamster Katalog",
   description: "Community-Katalog mit öffentlicher xHamster-Suche und Videodetails.",
   resources: ["catalog", "meta", "stream"],
@@ -33,10 +33,20 @@ builder.defineMetaHandler(args => scraper.metadata(args.id).catch(error => {
   console.error("[CVN metadata] request failed:", error?.stack || error);
   return { meta: { id: String(args.id || ""), type: "movie", name: "Video vorübergehend nicht verfügbar" } };
 }));
-builder.defineStreamHandler(args => scraper.streams(args.id).catch(error => {
-  console.error("[CVN streams] request failed:", error?.stack || error);
-  return { streams: [] };
-}));
+builder.defineStreamHandler(async args => {
+  const id = String(args.id || "");
+  const provider = id.startsWith("xh:") ? "xHamster" : id.startsWith("ep:") ? "Eporner" : id.startsWith("ae:") ? "AdultEmbed" : "unknown";
+  console.info("[CVN stream] request", provider);
+  try {
+    const result = await scraper.streams(id);
+    const count = Array.isArray(result?.streams) ? result.streams.length : 0;
+    console.info("[CVN stream] result", provider, count);
+    return result;
+  } catch (error) {
+    console.error("[CVN streams] request failed:", provider, error?.stack || error);
+    return { streams: [] };
+  }
+});
 
 const port = Number(process.env.PORT || 7000);
 serveHTTP(builder.getInterface(), { port });
