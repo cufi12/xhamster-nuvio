@@ -10,23 +10,27 @@ Unter **Einstellungen → Plugins → Add Repository** diese Manifest-URL einfü
 
 Danach die Repository-Liste aktualisieren und die gewünschten CVN-Provider aktivieren.
 
-## Drei Bereiche
+## Verbindliche Katalogstruktur
 
-1. **Deutsche Studios & Klassiker** – deutsche Produktionen und Klassiker.
-2. **German Dub · Italien, Europa & USA** – nur Titel mit nachgewiesener deutscher Synchron-Tonspur.
-3. **Hentai · Japanischer Originalton** – japanische Originalton-Fassungen.
+1. **Deutsche Studios** – deutsche Studios und Produktionen.
+2. **German Dub · Aller Welt** – internationale Filme mit tatsächlich deutscher Synchron-Tonspur.
+3. **Hentai · German Dub** – japanische Hentai-Filme und Serien mit tatsächlich deutscher Synchronisation.
 
-## Aktueller Funktionsstand
+## Quellenauswahl
 
-- Das Manifest verwendet jetzt das Nuvio-Plugin-Format: eine JSON-Liste mit Provider-Einträgen.
-- Jede Kategorie besitzt eine eigene JavaScript-Datei mit dem von Nuvio erwarteten `getStreams`-Export.
-- Die Provider geben aktuell absichtlich **keine Streams** zurück, bis kostenlose, öffentlich erreichbare Quellen und deren tatsächliche Wiedergabe verifiziert wurden.
-- Es werden keine Titel, Tonspuren oder abspielbaren URLs erfunden.
-- xHamster, Eporner und AdultEmbed sind nicht integriert und werden nicht reaktiviert.
+- Recherche-Ausgangspunkt: ThePornDude; nur Film-/Video-Plattformen passend zu den drei Kategorien.
+- Keine Cam-, Dating-, Chat-, Spiele- oder reine Bild-/Comic-Angebote.
+- Keine kostenpflichtigen Abos, Premium-only-Angebote oder PPV.
+- xHamster, Eporner und AdultEmbed sind ausdrücklich ausgeschlossen und werden nicht integriert.
+- Anime-Loads, HentaiCloud und HentaiZilla sind lediglich Recherche-Kandidaten, keine freigegebenen Provider.
+- Eine Plattform wird erst integriert, wenn Nutzungsrechte/öffentliche Berechtigung, deutsche Tonspur (wo erforderlich) und tatsächliche Player-Kompatibilität verifiziert sind.
 - Keine Umgehung von Logins, Altersprüfungen, CAPTCHAs, DRM, Paywalls oder Anti-Bot-Schutz.
-- Nur kostenlose, öffentlich zugängliche Inhalte; keine Abos oder PPV.
+
+## Funktionsstand
+
+Das Manifest und die drei Provider-Einträge bilden die vereinbarte Katalogstruktur ab. Die Provider-Dateien sind derzeit noch Platzhalter und liefern keine Streams. Es werden keine Titel, Tonspuren oder abspielbaren URLs erfunden.
 
 ## Separates Stremio-Addon
 
-Das Render-Addon ist ein eigener Dienst und wird **nicht** als Plugin-Repository installiert:
+Das frühere Render-Addon ist ein eigener Dienst und wird **nicht** als Plugin-Repository installiert:
 `https://cvn-xhamster-catalog.onrender.com/manifest.json`
