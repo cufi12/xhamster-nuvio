@@ -197,7 +197,10 @@ async function adultEmbedStreams(id) {
   if (!videoId) return [];
   const meta = await adultEmbedMetadata(id);
   const playerUrl = meta?.url || (AE_BASE + "/player/embed/" + encodeURIComponent(videoId) + "/");
-  return [{ name: "CVN AdultEmbed Player", title: meta?.name || "AdultEmbed", url: playerUrl }];
+  // AdultEmbed exposes an iframe player, not a direct media file. In the
+  // Stremio protocol this must be an externalUrl, otherwise clients try to
+  // feed an HTML page to the video decoder and show a playback error.
+  return [{ name: "CVN AdultEmbed – im Browser öffnen", title: meta?.name || "AdultEmbed", externalUrl: playerUrl }];
 }
 
 function epIdFromId(id) {
@@ -300,8 +303,24 @@ async function epornerStreams(id) {
   if (video.all_qualities && typeof video.all_qualities === "object") {
     for (const value of Object.values(video.all_qualities)) if (typeof value === "string") urls.push(value);
   }
-  return unique(urls.filter(url => /^https:\/\//i.test(url) && /\.(?:mp4|m3u8)(?:$|[?#])/i.test(url)))
-    .slice(0, 5).map(url => ({ name: "CVN Eporner", title: video.title || "Eporner", url }));
+  const direct = unique(urls.filter(url => /^https:\/\//i.test(url) && /\.(?:mp4|m3u8)(?:$|[?#])/i.test(url)))
+    .slice(0, 5);
+  if (direct.length) {
+    return direct.map(url => ({
+      name: "CVN Eporner",
+      title: video.title || "Eporner",
+      url,
+      ...( /\.m3u8(?:$|[?#])/i.test(url) ? { behaviorHints: { notWebReady: true } } : {})
+    }));
+  }
+  // If the API has no direct media URL, open the provider's public video page
+  // rather than returning an empty/invalid stream.
+  const pageUrl = epVideoUrl(video);
+  return pageUrl ? [{
+    name: "CVN Eporner – im Browser öffnen",
+    title: video.title || "Eporner",
+    externalUrl: pageUrl
+  }] : [];
 }
 
 const CATALOG_SEARCHES = {
@@ -434,12 +453,22 @@ async function streams(id) {
 
   const urls = unique(candidates);
   const title = metaTag(html, "og:title") || "xHamster";
+  if (!urls.length) {
+    return {
+      streams: [{
+        name: "CVN xHamster – im Browser öffnen",
+        title,
+        externalUrl: url
+      }]
+    };
+  }
   return {
     streams: urls.slice(0, 5).map(u => ({
       name: "CVN xHamster",
       title,
       url: u,
       behaviorHints: {
+        notWebReady: true,
         proxyHeaders: {
           request: {
             Referer: url,
