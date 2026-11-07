@@ -1,7 +1,49 @@
-{
-  "name": "CVN Gratis-Katalog",
-  "version": "3.0.0",
-  "description": "Drei getrennte kostenlose Katalogbereiche; keine bisherige Plattform ist aktiv integriert.",
-  "scrapers": [],
-  "id": "community.cvn.free.catalog"
-}
+[
+  {
+    "id": "cvn-de-classics",
+    "name": "CVN · Deutsche Studios & Klassiker",
+    "description": "Kostenlose, öffentlich zugängliche deutsche Produktionen und Klassiker. Aktiviert erst nach Integration geprüfter Quellen.",
+    "version": "1.0.0",
+    "author": "CVN",
+    "supportedTypes": [
+      "movie"
+    ],
+    "filename": "providers/de-classics.js",
+    "enabled": true,
+    "contentLanguage": [
+      "de"
+    ]
+  },
+  {
+    "id": "cvn-german-dub",
+    "name": "CVN · German Dub · Italien, Europa & USA",
+    "description": "Nur Produktionen mit nachgewiesener deutscher Synchron-Tonspur; keine bloßen Untertitel-Treffer.",
+    "version": "1.0.0",
+    "author": "CVN",
+    "supportedTypes": [
+      "movie"
+    ],
+    "filename": "providers/german-dub.js",
+    "enabled": true,
+    "contentLanguage": [
+      "de",
+      "it",
+      "en"
+    ]
+  },
+  {
+    "id": "cvn-hentai-jp",
+    "name": "CVN · Hentai · Japanischer Originalton",
+    "description": "Kostenlose, öffentlich zugängliche japanische Originalton-Titel.",
+    "version": "1.0.0",
+    "author": "CVN",
+    "supportedTypes": [
+      "movie"
+    ],
+    "filename": "providers/hentai-jp.js",
+    "enabled": true,
+    "contentLanguage": [
+      "ja"
+    ]
+  }
+]
