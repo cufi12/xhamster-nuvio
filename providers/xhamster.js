@@ -2,7 +2,6 @@
 // then searches publicly accessible xHamster pages for matching, directly exposed
 // media URLs. It does not bypass login, age checks, CAPTCHAs, DRM, or anti-bot protections.
 
-const TMDB_API_KEY = "4ef0d7355d9ffb5151e987764708ce96";
 const SEARCH_BASE = "https://ge.xhamster.com/search/";
 
 function decodeHtml(value) {
@@ -41,6 +40,11 @@ function isXHamsterVideoPage(url) {
   return /^https:\/\/(?:[a-z0-9-]+\.)*xhamster\.com\/videos?\//i.test(url);
 }
 
+function getTmdbApiKey() {
+  var settings = (typeof globalThis !== "undefined" && globalThis.SCRAPER_SETTINGS) || {};
+  return String(settings.tmdbApiKey || "").trim();
+}
+
 function requestJson(url) {
   return fetch(url, { headers: { Accept: "application/json" } })
     .then(function (response) {
@@ -50,10 +54,12 @@ function requestJson(url) {
 }
 
 function metadataFromTmdbId(id, mediaType) {
+  var apiKey = getTmdbApiKey();
+  if (!apiKey) return Promise.reject(new Error("TMDB API key is not configured in provider settings"));
   var endpoint = mediaType === "tv" || mediaType === "series" ? "tv" : "movie";
   var url = "https://api.themoviedb.org/3/" + endpoint + "/" +
     encodeURIComponent(String(id)) +
-    "?api_key=" + encodeURIComponent(TMDB_API_KEY) +
+    "?api_key=" + encodeURIComponent(apiKey) +
     "&language=de-DE";
 
   return requestJson(url).then(function (data) {
@@ -66,6 +72,8 @@ function metadataFromTmdbId(id, mediaType) {
 }
 
 function metadataFromImdbId(imdbId) {
+  var apiKey = getTmdbApiKey();
+  if (!apiKey) return Promise.reject(new Error("TMDB API key is not configured in provider settings"));
   var findUrl = "https://api.themoviedb.org/3/find/" +
     encodeURIComponent(imdbId) +
     "?external_source=imdb_id&api_key=" + encodeURIComponent(TMDB_API_KEY) +
@@ -300,4 +308,22 @@ function getStreams(tmdbId, mediaType) {
     });
 }
 
-module.exports = { getStreams: getStreams };
+function onSettings() {
+  return [
+    { type: "header", label: "TMDB-Konfiguration" },
+    {
+      type: "text",
+      key: "tmdbApiKey",
+      label: "TMDB API-Schlüssel",
+      placeholder: "Persönlichen TMDB API-Schlüssel eingeben",
+      description: "Wird lokal in den Plugin-Einstellungen gespeichert und nicht im Repository hinterlegt.",
+      isPassword: true
+    },
+    {
+      type: "info",
+      label: "Ohne TMDB-Schlüssel kann der Provider Filmtitel nicht zuverlässig auflösen."
+    }
+  ];
+}
+
+module.exports = { getStreams: getStreams, onSettings: onSettings };
