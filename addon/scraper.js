@@ -322,6 +322,7 @@ async function epornerStreams(id) {
   // The official Eporner ID API documents metadata fields, not playable media
   // URLs. Some responses therefore contain a valid video but no sources.
   // Read only directly exposed MP4/HLS URLs from the public embed HTML as fallback.
+  video = video || { title: "Eporner" };
   const candidates = [];
   const add = (value, quality) => {
     if (value && typeof value === "object") {
