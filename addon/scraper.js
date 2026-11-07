@@ -70,6 +70,9 @@ const CATALOG_SEARCHES = {
   xh_german_studio: "German studio",
   xh_german_dub: "German Dub",
   xh_mario_salieri_german_dub: "Mario Salieri German Dub",
+  xh_hentai_german_dub: "Hentai German Dub",
+  xh_hentai_german: "German Hentai",
+  xh_hentai_german_new: "German Hentai new",
   xh_german_new: "German new",
   xh_german_popular: "German popular"
 };
