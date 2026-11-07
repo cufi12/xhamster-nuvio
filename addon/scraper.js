@@ -1,4 +1,7 @@
 const BASE = "https://ge.xhamster.com";
+const EP_API = "https://www.eporner.com/api/v2/video/search/";
+const EP_BASE = "https://www.eporner.com";
+
 const VIDEO_RE = /^https:\/\/(?:[a-z0-9-]+\.)*xhamster\.com\/videos?\//i;
 
 function decode(value) {
@@ -97,7 +100,110 @@ async function pageMeta(url) {
     background: poster || undefined, url
   };
 }
-const CATALOG_SEARCHES = {
+
+function epIdFromId(id) {
+  const value = String(id || "");
+  return value.startsWith("ep:") ? value.slice(3) : "";
+}
+function epVideoId(video) {
+  return String(video?.id || video?.video_id || "").trim();
+}
+function epVideoUrl(video) {
+  const url = String(video?.url || video?.link || "").trim();
+  if (/^https:\/\/(?:www\\.)?eporner\\.com\/(?:video-|hd-porn\/)/i.test(url)) return url;
+  const id = epVideoId(video);
+  return id ? EP_BASE + "/embed/" + encodeURIComponent(id) : "";
+}
+function epTags(video) {
+  const raw = video?.keywords || video?.tags || "";
+  return Array.isArray(raw) ? raw.join(" ") : String(raw);
+}
+async function epornerSearch(query, page = 1) {
+  const params = new URLSearchParams({
+    query, per_page: "100", page: String(page), thumbsize: "big",
+    order: "most-popular", gay: "0", lq: "1", format: "json"
+  });
+  const response = await fetch(EP_API + "?" + params.toString(), {
+    headers: { Accept: "application/json" }
+  });
+  if (!response.ok) return [];
+  const data = await response.json();
+  return Array.isArray(data.videos) ? data.videos : (Array.isArray(data) ? data : []);
+}
+async function epornerCatalog(catalogId, skip) {
+  const queries = {
+    xh_german_studio: ["German"],
+    xh_german_all: ["German Dub", "Deutsch", "German"],
+    xh_hentai_german_dub: ["Hentai German Dub", "German Hentai", "Hentai Deutsch"],
+    xh_mario_salieri_german_dub: ["Mario Salieri German Dub", "Mario Salieri German"]
+  }[catalogId] || [];
+  const batches = await Promise.all(queries.map(q => epornerSearch(q, 1)));
+  const seen = new Set();
+  const videos = [];
+  for (const batch of batches) {
+    for (const video of batch) {
+      const id = epVideoId(video);
+      if (!id || seen.has(id)) continue;
+      seen.add(id);
+      const searchable = (String(video.title || "") + " " + epTags(video)).toLowerCase();
+      const german = /german|deutsch|deutsche|deutschsprachig|german dub|ger dub/.test(searchable);
+      const hentai = /hentai|anime|animated/.test(searchable);
+      const salieri = /mario salieri|salieri/.test(searchable);
+      if (catalogId === "xh_hentai_german_dub" && !(german && hentai)) continue;
+      if (catalogId === "xh_mario_salieri_german_dub" && !(german && salieri)) continue;
+      if (catalogId === "xh_german_all" && !german) continue;
+      videos.push(video);
+    }
+  }
+  const page = videos.slice(skip, skip + 40);
+  return page.map(video => {
+    const id = epVideoId(video);
+    const url = epVideoUrl(video);
+    const poster = video.default_thumb || video.thumb || video.image || video.thumbnail;
+    const title = String(video.title || "Eporner Video").trim();
+    return {
+      id: "ep:" + id, type: "movie", name: title,
+      poster: poster || undefined, background: poster || undefined,
+      posterShape: "landscape", description: epTags(video) || undefined,
+      url: url || undefined
+    };
+  });
+}
+async function epornerMetadata(id) {
+  const videoId = epIdFromId(id);
+  if (!videoId) return null;
+  const params = new URLSearchParams({ id: videoId, per_page: "1", thumbsize: "big", format: "json" });
+  const response = await fetch(EP_API + "?" + params.toString(), { headers: { Accept: "application/json" } });
+  if (!response.ok) return null;
+  const data = await response.json();
+  const video = (Array.isArray(data.videos) ? data.videos : [])[0];
+  if (!video) return null;
+  const poster = video.default_thumb || video.thumb || video.image || video.thumbnail;
+  return {
+    id: "ep:" + videoId, type: "movie", name: String(video.title || "Eporner Video"),
+    poster: poster || undefined, background: poster || undefined,
+    posterShape: "landscape", description: epTags(video) || undefined,
+    url: epVideoUrl(video) || undefined
+  };
+}
+async function epornerStreams(id) {
+  const videoId = epIdFromId(id);
+  if (!videoId) return [];
+  const params = new URLSearchParams({ id: videoId, per_page: "1", thumbsize: "big", format: "json" });
+  const response = await fetch(EP_API + "?" + params.toString(), { headers: { Accept: "application/json" } });
+  if (!response.ok) return [];
+  const data = await response.json();
+  const video = (Array.isArray(data.videos) ? data.videos : [])[0];
+  if (!video) return [];
+  const urls = [];
+  if (video.default_quality?.url) urls.push(video.default_quality.url);
+  if (video.all_qualities && typeof video.all_qualities === "object") {
+    for (const value of Object.values(video.all_qualities)) if (typeof value === "string") urls.push(value);
+  }
+  return unique(urls.filter(url => /^https:\/\//i.test(url) && /\.(?:mp4|m3u8)(?:$|[?#])/i.test(url)))
+    .slice(0, 5).map(url => ({ name: "CVN Eporner", title: video.title || "Eporner", url }));
+}
+\nconst CATALOG_SEARCHES = {
   // Search phrases are public-site queries; they do not guarantee language or studio metadata.
   xh_german_studio: "German",
   xh_hentai_german_dub: "Hentai German Dub",
@@ -112,11 +218,11 @@ async function catalog(args) {
     const html = await getHtml(BASE + "/");
     const links = videoLinks(html);
     const metas = await Promise.all(links.slice(skip, skip + 40).map(pageMeta));
-    return { metas: metas.filter(Boolean), cacheMaxAge: 900 };
+    return { metas: [...metas.filter(Boolean), ...epMetas], cacheMaxAge: 900 };
   }
   const links = await searchVideoLinks(search);
   const metas = await Promise.all(links.slice(skip, skip + 40).map(pageMeta));
-  return { metas: metas.filter(Boolean), cacheMaxAge: 300 };
+  return { metas: [...metas.filter(Boolean), ...epMetas], cacheMaxAge: 300 };
 }
 async function metadata(id) {
   const url = urlFromId(id);
@@ -204,4 +310,4 @@ async function streams(id) {
     }))
   };
 }
-module.exports = { catalog, metadata, streams, videoLinks, urlFromId };
+module.exports = { catalog, metadata, streams, videoLinks, urlFromId, epornerSearch };
