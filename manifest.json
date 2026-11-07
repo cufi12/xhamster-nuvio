@@ -1,23 +1,18 @@
 {
-  "name": "CVN-xHamster Deutsch",
-  "version": "2.0.0",
+  "name": "CVN Multi-Provider",
+  "version": "2.1.0",
+  "description": "Nuvio-Provider-Sammlung mit getrennten Scrapers pro Plattform.",
   "scrapers": [
     {
       "id": "xhamster",
       "name": "CVN-xHamster Deutsch",
-      "description": "Experimenteller xHamster-Provider; deutsche Sprache nicht verifiziert",
-      "version": "2.0.0",
+      "description": "xHamster-Provider; deutsche Sprache nicht verifiziert",
+      "version": "2.1.0",
       "author": "cufi12",
-      "supportedTypes": [
-        "movie"
-      ],
+      "supportedTypes": ["movie"],
       "filename": "providers/xhamster.js",
       "enabled": true,
-      "formats": [
-        "hls",
-        "m3u8",
-        "mp4"
-      ],
+      "formats": ["hls", "m3u8", "mp4"],
       "limited": false,
       "disabledPlatforms": [],
       "hasSettings": true
