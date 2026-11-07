@@ -143,27 +143,64 @@ function findVideoPages(html) {
 
 function extractMedia(html, pageUrl) {
   var candidates = [];
-  var patterns = [
-    /["'](?:contentUrl|src|file|videoUrl|url)["']\s*:\s*["']([^"']+)["']/gi,
-    /<(?:source|video)[^>]+(?:src|data-src)\s*=\s*["']([^"']+)["']/gi,
-    /<meta[^>]+(?:property|name)=["']og:video(?::url)?["'][^>]+content=["']([^"']+)["']/gi
-  ];
+  function add(value, quality) {
+    if (value && typeof value === "object") {
+      quality = value.quality || value.label || quality;
+      value = value.url || value.src || value.fallback;
+    }
+    if (typeof value !== "string") return;
+    var url = absoluteUrl(value, pageUrl);
+    if (!/^https:\/\//i.test(url) || !/\.(?:mp4|m3u8)(?:[?#]|$)/i.test(url)) return;
+    candidates.push({ url: url, quality: String(quality || "") });
+  }
 
+  // xHamster publishes player sources in its public initials JSON on some
+  // pages. Read only clear-text URLs already present in that response.
+  var initialsMatch = html.match(/<script[^>]+id=["']initials-script["'][^>]*>([\s\S]*?)<\/script>/i);
+  if (initialsMatch) {
+    try {
+      var initials = JSON.parse(initialsMatch[1].trim());
+      var sources = initials && initials.xplayerSettings && initials.xplayerSettings.sources;
+      if (sources && typeof sources === "object") {
+        ["hls", "standard"].forEach(function (kind) {
+          var group = sources[kind];
+          if (!group || typeof group !== "object") return;
+          Object.keys(group).forEach(function (quality) {
+            var entries = Array.isArray(group[quality]) ? group[quality] : [group[quality]];
+            entries.forEach(function (entry) { add(entry, quality); });
+          });
+        });
+      }
+    } catch (error) {
+      console.log("[CVN-xHamster] Public player metadata was not valid JSON");
+    }
+  }
+
+  // Fallback: direct media URLs explicitly published in page markup/JSON.
+  var patterns = [
+    /["'](?:contentUrl|src|file|videoUrl|url)["']\s*:\s*["']([^"']+\.(?:m3u8|mp4)(?:\?[^"']*)?)["']/gi,
+    /<(?:source|video)[^>]+(?:src|data-src)\s*=\s*["']([^"']+\.(?:m3u8|mp4)(?:\?[^"']*)?)["']/gi,
+    /<meta[^>]+(?:property|name)=["']og:video(?::url)?["'][^>]+content=["']([^"']+\.(?:m3u8|mp4)(?:\?[^"']*)?)["']/gi
+  ];
   patterns.forEach(function (pattern) {
     var match;
-    while ((match = pattern.exec(html)) !== null) {
-      var url = absoluteUrl(match[1], pageUrl);
-      if (/^https:\/\//i.test(url) && /\.(?:mp4|m3u8)(?:[?#]|$)/i.test(url)) {
-        candidates.push(url);
-      }
-    }
+    while ((match = pattern.exec(html)) !== null) add(match[1]);
   });
 
-  // Prefer HLS playlists exclusively. MP4 is deliberately not returned,
-  // because it buffers without starting in the user's Nuvio setup.
-  return unique(candidates).filter(function (url) {
-    return /\.m3u8(?:[?#]|$)/i.test(url);
+  var uniqueByUrl = {};
+  candidates.forEach(function (item) { uniqueByUrl[item.url] = item; });
+  var result = Object.keys(uniqueByUrl).map(function (url) { return uniqueByUrl[url]; });
+  // Prefer HLS, then the highest available resolution; MP4 remains a
+  // native-player fallback when the source exposes no HLS playlist.
+  result.sort(function (a, b) {
+    var ahls = /\.m3u8(?:[?#]|$)/i.test(a.url) ? 1 : 0;
+    var bhls = /\.m3u8(?:[?#]|$)/i.test(b.url) ? 1 : 0;
+    if (ahls !== bhls) return bhls - ahls;
+    var aq = Number((a.quality.match(/\d+/) || [0])[0]);
+    var bq = Number((b.quality.match(/\d+/) || [0])[0]);
+    return bq - aq;
   });
+  return result.slice(0, 5);
 }
 
 function pageTitle(html) {
@@ -245,12 +282,17 @@ function fetchMatchingPage(pageUrl, movieTitle) {
     });
     if (!matchesTitle) return [];
 
-    return extractMedia(html, pageUrl).map(function (mediaUrl) {
+    return extractMedia(html, pageUrl).map(function (source) {
+      var isHls = /\.m3u8(?:[?#]|$)/i.test(source.url);
       return {
         name: "CVN-xHamster Deutsch",
-        title: label,
-        url: mediaUrl,
-        quality: /\.m3u8(?:[?#]|$)/i.test(mediaUrl) ? "HLS" : "MP4"
+        title: label + (source.quality ? " · " + source.quality : ""),
+        url: source.url,
+        quality: source.quality || (isHls ? "HLS" : "MP4"),
+        headers: {
+          Referer: pageUrl,
+          Origin: "https://ge.xhamster.com"
+        }
       };
     });
   }).catch(function () {
