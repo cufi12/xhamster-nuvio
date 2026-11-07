@@ -8,7 +8,7 @@ const manifest = {
   description: "Community-Katalog mit öffentlicher xHamster-Suche und Videodetails.",
   resources: ["catalog", "meta", "stream"],
   types: ["movie"],
-  idPrefixes: ["xh:"],
+  idPrefixes: ["xh:", "ep:"],
   catalogs: [
     { type: "movie", id: "xh_german_studio", name: "Deutsche Filme", showInHome: true, pageSize: 40 },
     { type: "movie", id: "xh_german_all", name: "German Dub", showInHome: true, pageSize: 40 },
