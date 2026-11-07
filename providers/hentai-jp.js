@@ -1,8 +1,8 @@
-// Hentai · Japanischer Originalton
-// Safe placeholder: no provider source has been verified for this category yet.
-// Return no streams rather than inventing URLs or bypassing site protections.
+// Hentai · Japanische Produktionen mit deutscher Synchronisation
+// Includes films and series; no original-audio-only or subtitle-only entries.
+// Placeholder until lawful public sources and actual German audio tracks are verified.
 function getStreams() {
-  console.log("[CVN] Hentai · Japanischer Originalton: no verified public streams configured yet.");
+  console.log("[CVN] Hentai · German Dub: no verified lawful streams configured yet.");
   return Promise.resolve([]);
 }
 
