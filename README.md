@@ -1,36 +1,33 @@
 # CVN Gratis-Katalog für Nuvio
 
-Dieses Repository ist ein **Nuvio-Plugin-Repository** (Provider-Manifest), nicht das separate Stremio-Addon.
+Dieses Repository ist für **Nuvio Plugins** bestimmt, nicht für Stremio-Add-ons.
 
-## Installation in Nuvio
+## Installation
 
-Unter **Einstellungen → Plugins → Add Repository** diese Manifest-URL einfügen:
-
+Manifest-URL:
 `https://raw.githubusercontent.com/cufi12/xhamster-nuvio/add-xhamster-provider/manifest.json`
 
-Danach die Repository-Liste aktualisieren und die gewünschten CVN-Provider aktivieren.
-
-## Verbindliche Katalogstruktur
+## Geplante Kategorien
 
 1. **Deutsche Studios** – deutsche Studios und Produktionen.
 2. **German Dub · Aller Welt** – internationale Filme mit tatsächlich deutscher Synchron-Tonspur.
 3. **Hentai · German Dub** – japanische Hentai-Filme und Serien mit tatsächlich deutscher Synchronisation.
 
-## Quellenauswahl
+## Prüfregeln
 
-- Recherche-Ausgangspunkt: ThePornDude; nur Film-/Video-Plattformen passend zu den drei Kategorien.
-- Keine Cam-, Dating-, Chat-, Spiele- oder reine Bild-/Comic-Angebote.
-- Keine kostenpflichtigen Abos, Premium-only-Angebote oder PPV.
-- xHamster, Eporner und AdultEmbed sind ausdrücklich ausgeschlossen und werden nicht integriert.
-- Anime-Loads, HentaiCloud und HentaiZilla sind lediglich Recherche-Kandidaten, keine freigegebenen Provider.
-- Eine Plattform wird erst integriert, wenn Nutzungsrechte/öffentliche Berechtigung, deutsche Tonspur (wo erforderlich) und tatsächliche Player-Kompatibilität verifiziert sind.
+- Nur kostenlose, öffentlich erreichbare Videoangebote.
+- Keine Cam-, Dating-, Chat-, Spiele-, Premium-only- oder PPV-Angebote.
+- xHamster, Eporner und AdultEmbed sind ausdrücklich ausgeschlossen.
+- Anime-Loads, HentaiCloud und HentaiZilla sind bislang nur Recherche-Kandidaten; keine dieser Seiten ist als autorisierte und technisch funktionierende Quelle bestätigt.
+- Ein Verzeichniseintrag, eine frei erreichbare Videoseite oder eine deutsche Untertitelspur beweist weder Einbindungsrechte noch deutsche Synchronisation.
 - Keine Umgehung von Logins, Altersprüfungen, CAPTCHAs, DRM, Paywalls oder Anti-Bot-Schutz.
 
-## Funktionsstand
+## Technischer Status – ausdrücklich kein Release
 
-Das Manifest und die drei Provider-Einträge bilden die vereinbarte Katalogstruktur ab. Die Provider-Dateien sind derzeit noch Platzhalter und liefern keine Streams. Es werden keine Titel, Tonspuren oder abspielbaren URLs erfunden.
+Das Manifest verwendet das Nuvio-Repositoryformat mit einem `scrapers`-Array. Nuvio-Provider müssen `getStreams(tmdbId, mediaType, season, episode)` exportieren und ein Array abspielbarer Stream-Objekte zurückgeben.
 
-## Separates Stremio-Addon
+Die drei Provider-Dateien sind derzeit Platzhalter und liefern keine Streams. Deshalb sind alle drei Einträge im Manifest **deaktiviert**. Es wurde noch kein End-to-End-Test in der Nuvio-App durchgeführt. Dieses Repository ist aktuell **nicht als funktionierender Videokatalog freigegeben**.
 
-Das frühere Render-Addon ist ein eigener Dienst und wird **nicht** als Plugin-Repository installiert:
-`https://cvn-xhamster-catalog.onrender.com/manifest.json`
+## Vor einer Freigabe zwingend
+
+Für jeden Provider müssen eine autorisierte Quelle, die geforderte deutsche Tonspur, ein tatsächlich abspielbarer Direktstream, korrekte Film-/Serienzuordnung sowie die Wiedergabe in Nuvio separat nachgewiesen und getestet werden.
