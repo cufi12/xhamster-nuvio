@@ -1,22 +1,7 @@
 {
-  "name": "CVN Multi-Provider",
-  "version": "2.1.0",
-  "description": "Nuvio-Provider-Sammlung mit getrennten Scrapers pro Plattform.",
-  "scrapers": [
-    {
-      "id": "xhamster",
-      "name": "CVN-xHamster Deutsch",
-      "description": "xHamster-Provider; deutsche Sprache nicht verifiziert",
-      "version": "2.1.0",
-      "author": "cufi12",
-      "supportedTypes": ["movie"],
-      "filename": "providers/xhamster.js",
-      "enabled": true,
-      "formats": ["hls", "m3u8", "mp4"],
-      "limited": false,
-      "disabledPlatforms": [],
-      "hasSettings": true
-    }
-  ],
-  "id": "community.cvn.xhamster.deutsch"
+  "name": "CVN Gratis-Katalog",
+  "version": "3.0.0",
+  "description": "Drei getrennte kostenlose Katalogbereiche; keine bisherige Plattform ist aktiv integriert.",
+  "scrapers": [],
+  "id": "community.cvn.free.catalog"
 }
