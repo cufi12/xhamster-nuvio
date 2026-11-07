@@ -1,6 +1,6 @@
-// Nuvio provider: searches public xHamster pages for an externally supplied movie title.
-// It only returns directly exposed HTTPS MP4/HLS URLs. It does not bypass login,
-// age checks, CAPTCHAs, DRM, or anti-bot protections.
+// Nuvio provider: resolves a movie title from TMDB or an IMDb external ID,
+// then searches publicly accessible xHamster pages for matching, directly exposed
+// media URLs. It does not bypass login, age checks, CAPTCHAs, DRM, or anti-bot protections.
 
 const TMDB_API_KEY = "4ef0d7355d9ffb5151e987764708ce96";
 const SEARCH_BASE = "https://xhamster.com/search/";
@@ -38,20 +38,70 @@ function isXHamsterVideoPage(url) {
   return /^https:\/\/(?:[a-z0-9-]+\.)*xhamster\.com\/videos?\//i.test(url);
 }
 
-function readMovieTitle(tmdbId) {
-  var url = "https://api.themoviedb.org/3/movie/" +
-    encodeURIComponent(String(tmdbId)) +
+function requestJson(url) {
+  return fetch(url, { headers: { Accept: "application/json" } })
+    .then(function (response) {
+      if (!response.ok) throw new Error("Metadata request failed: " + response.status);
+      return response.json();
+    });
+}
+
+function metadataFromTmdbId(id, mediaType) {
+  var endpoint = mediaType === "tv" || mediaType === "series" ? "tv" : "movie";
+  var url = "https://api.themoviedb.org/3/" + endpoint + "/" +
+    encodeURIComponent(String(id)) +
     "?api_key=" + encodeURIComponent(TMDB_API_KEY) +
     "&language=de-DE";
 
-  return fetch(url, { headers: { Accept: "application/json" } })
-    .then(function (response) {
-      if (!response.ok) throw new Error("TMDB title lookup failed: " + response.status);
-      return response.json();
-    })
-    .then(function (data) {
-      return data.title || data.original_title || "";
+  return requestJson(url).then(function (data) {
+    return {
+      title: data.title || data.name || data.original_title || data.original_name || "",
+      year: String(data.release_date || data.first_air_date || "").slice(0, 4)
+    };
+  });
+}
+
+function metadataFromImdbId(imdbId) {
+  var findUrl = "https://api.themoviedb.org/3/find/" +
+    encodeURIComponent(imdbId) +
+    "?external_source=imdb_id&api_key=" + encodeURIComponent(TMDB_API_KEY) +
+    "&language=de-DE";
+
+  return requestJson(findUrl).then(function (data) {
+    var item = (data.movie_results && data.movie_results[0]) ||
+      (data.tv_results && data.tv_results[0]);
+    if (item) {
+      return {
+        title: item.title || item.name || item.original_title || item.original_name || "",
+        year: String(item.release_date || item.first_air_date || "").slice(0, 4)
+      };
+    }
+    throw new Error("IMDb ID has no TMDB match");
+  }).catch(function () {
+    // IMDb fallback: read only public title metadata; do not bypass any access gate.
+    return fetch("https://www.imdb.com/title/" + encodeURIComponent(imdbId) + "/", {
+      headers: { Accept: "text/html,application/xhtml+xml" }
+    }).then(function (response) {
+      if (!response.ok) throw new Error("IMDb metadata unavailable: " + response.status);
+      return response.text();
+    }).then(function (html) {
+      var titleMatch =
+        html.match(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["']/i) ||
+        html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+      var yearMatch = html.match(/(?:19|20)\d{2}/);
+      var title = titleMatch ? decodeHtml(titleMatch[1]).replace(/\s*[-|].*$/, "").trim() : "";
+      if (!title) throw new Error("IMDb title not found");
+      return { title: title, year: yearMatch ? yearMatch[0] : "" };
     });
+  });
+}
+
+function resolveMovieMetadata(id, mediaType) {
+  var rawId = String(id || "");
+  var imdbMatch = rawId.match(/tt\d{7,}/i);
+  if (imdbMatch) return metadataFromImdbId(imdbMatch[0]);
+
+  return metadataFromTmdbId(rawId, mediaType);
 }
 
 function findVideoPages(html) {
@@ -65,7 +115,7 @@ function findVideoPages(html) {
       links.push(url.split("#")[0].split("?")[0]);
     }
   }
-  return unique(links).slice(0, 8);
+  return unique(links).slice(0, 20);
 }
 
 function extractMedia(html, pageUrl) {
@@ -96,56 +146,89 @@ function pageTitle(html) {
 
   return match
     ? decodeHtml(match[1]).replace(/\s*[-|].*$/, "").trim()
-    : "xHamster";
+    : "";
+}
+
+function titleMatches(targetTitle, candidateTitle) {
+  var stopWords = { "the": true, "in": true, "a": true, "an": true, "of": true, "and": true };
+  var tokens = String(targetTitle || "").toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .split(/\s+/)
+    .filter(function (word) { return word.length > 2 && !stopWords[word]; });
+  var candidate = " " + String(candidateTitle || "").toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ").replace(/\s+/g, " ").trim() + " ";
+
+  if (!tokens.length) return false;
+  var matches = tokens.filter(function (word) {
+    return candidate.indexOf(" " + word + " ") !== -1;
+  }).length;
+  return matches >= Math.min(2, tokens.length);
+}
+
+function fetchSearchPages(query) {
+  var searchUrl = SEARCH_BASE + encodeURIComponent(query);
+  return fetch(searchUrl, {
+    headers: { Accept: "text/html,application/xhtml+xml" }
+  }).then(function (response) {
+    if (!response.ok) return [];
+    return response.text();
+  }).then(function (html) {
+    return html ? findVideoPages(html) : [];
+  }).catch(function () {
+    return [];
+  });
+}
+
+function fetchMatchingPage(pageUrl, movieTitle) {
+  return fetch(pageUrl, {
+    headers: { Accept: "text/html,application/xhtml+xml" }
+  }).then(function (response) {
+    if (!response.ok) return [];
+    return response.text();
+  }).then(function (html) {
+    if (!html) return [];
+    var label = pageTitle(html);
+    if (!titleMatches(movieTitle, label)) return [];
+
+    return extractMedia(html, pageUrl).map(function (mediaUrl) {
+      return {
+        name: "CVN-xHamster Deutsch",
+        title: label,
+        url: mediaUrl,
+        quality: "Unknown"
+      };
+    });
+  }).catch(function () {
+    return [];
+  });
 }
 
 function getStreams(tmdbId, mediaType) {
   if (mediaType && mediaType !== "movie") return Promise.resolve([]);
   if (tmdbId == null) return Promise.resolve([]);
 
-  return readMovieTitle(tmdbId)
-    .then(function (title) {
-      if (!title) return [];
-      var searchUrl = SEARCH_BASE + encodeURIComponent(title);
+  return resolveMovieMetadata(tmdbId, mediaType)
+    .then(function (metadata) {
+      if (!metadata || !metadata.title) return [];
 
-      return fetch(searchUrl, {
-        headers: { Accept: "text/html,application/xhtml+xml" }
-      }).then(function (response) {
-        if (!response.ok) return [];
-        return response.text();
-      }).then(function (searchHtml) {
-        if (!searchHtml) return [];
-        var pages = findVideoPages(searchHtml);
+      var queries = [metadata.title];
+      if (metadata.year) queries.push(metadata.title + " " + metadata.year);
 
-        return Promise.all(pages.map(function (pageUrl) {
-          return fetch(pageUrl, {
-            headers: { Accept: "text/html,application/xhtml+xml" }
-          }).then(function (response) {
-            if (!response.ok) return [];
-            return response.text();
-          }).then(function (html) {
-            if (!html) return [];
-            var label = pageTitle(html);
-            return extractMedia(html, pageUrl).map(function (mediaUrl) {
-              return {
-                name: "CVN-xHamster",
-                title: label,
-                url: mediaUrl,
-                quality: "Unknown"
-              };
-            });
-          }).catch(function () {
-            return [];
-          });
-        })).then(function (groups) {
+      return Promise.all(queries.map(fetchSearchPages))
+        .then(function (groups) {
+          var pages = unique([].concat.apply([], groups)).slice(0, 20);
+          return Promise.all(pages.map(function (pageUrl) {
+            return fetchMatchingPage(pageUrl, metadata.title);
+          }));
+        })
+        .then(function (groups) {
           return groups.reduce(function (all, group) {
             return all.concat(group);
           }, []);
         });
-      });
     })
     .catch(function () {
-      // Fail closed when TMDB or xHamster is unavailable, blocked, or incompatible.
+      // No metadata, blocked page, or incompatible source: return no streams.
       return [];
     });
 }
