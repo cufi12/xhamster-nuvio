@@ -143,10 +143,12 @@ async function adultEmbedCatalog(catalogId, skip) {
       if (!id || seen.has(id)) continue;
       seen.add(id);
       const searchable = aeText(video).toLowerCase();
-      const germanDub = /german dub|german dubbed|deutsch synchronisiert|deutsche synchronisation|ger dub/.test(searchable);
+      // Only keep results whose public title/tags/description explicitly indicate German audio dubbing.
+      // lang=de translates metadata only; it is never treated as proof of German audio.
+      const germanDub = /german dub(?:bed)?|ger dub|german audio|german voice|deutsch synchronisiert|deutsche synchronisation|deutsch vertont|deutsche tonspur|deutsche synchro/.test(searchable);
       const hentai = /hentai|anime|animated/.test(searchable);
       const salieri = /mario salieri|salieri/.test(searchable);
-      if (catalogId === "xh_german_all" && !germanDub) continue;
+      if (["xh_german_studio", "xh_german_all"].includes(catalogId) && !germanDub) continue;
       if (catalogId === "xh_hentai_german_dub" && !(germanDub && hentai)) continue;
       if (catalogId === "xh_mario_salieri_german_dub" && !(germanDub && salieri)) continue;
       videos.push(video);
