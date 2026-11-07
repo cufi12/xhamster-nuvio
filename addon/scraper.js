@@ -1,6 +1,8 @@
 const BASE = "https://ge.xhamster.com";
 const EP_API = "https://www.eporner.com/api/v2/video/search/";
 const EP_BASE = "https://www.eporner.com";
+const AE_API = "https://adultembed.com/api/v1";
+const AE_BASE = "https://adultembed.com";
 
 const VIDEO_RE = /^https:\/\/(?:[a-z0-9-]+\.)*xhamster\.com\/videos?\//i;
 
@@ -99,6 +101,96 @@ async function pageMeta(url) {
     description: description || undefined, posterShape: "landscape",
     background: poster || undefined, url
   };
+}
+
+
+function aeIdFromId(id) {
+  const value = String(id || "");
+  return value.startsWith("ae:") ? value.slice(3) : "";
+}
+function aeVideoId(video) { return String(video?.id || "").trim(); }
+function aePlayerUrl(video) {
+  const candidate = String(video?.embed?.url || video?.embed_url || "").trim();
+  if (/^https:\/\/adultembed\.com\/player\/embed\//i.test(candidate)) return candidate;
+  const id = aeVideoId(video);
+  return id ? AE_BASE + "/player/embed/" + encodeURIComponent(id) + "/" : "";
+}
+function aeText(video) {
+  const tags = Array.isArray(video?.tags) ? video.tags.join(" ") : String(video?.tags || "");
+  const performers = Array.isArray(video?.performers) ? video.performers.join(" ") : "";
+  return [video?.title, video?.description, tags, performers, video?.studio].filter(Boolean).join(" ");
+}
+async function adultEmbedSearch(query, page = 1) {
+  const params = new URLSearchParams({ query, per_page: "100", page: String(page), sort: "popular", lang: "de" });
+  const response = await fetch(AE_API + "/search?" + params.toString(), { headers: { Accept: "application/json" } });
+  if (!response.ok) return [];
+  const data = await response.json();
+  return Array.isArray(data.results) ? data.results : [];
+}
+async function adultEmbedCatalog(catalogId, skip) {
+  const queries = {
+    xh_german_studio: ["German Dub", "Deutsch synchronisiert"],
+    xh_german_all: ["German Dub", "German dubbed", "Deutsch synchronisiert"],
+    xh_hentai_german_dub: ["Hentai German Dub", "Hentai Deutsch synchronisiert"],
+    xh_mario_salieri_german_dub: ["Mario Salieri German Dub", "Mario Salieri Deutsch"]
+  }[catalogId] || [];
+  const batches = await Promise.all(queries.map(q => adultEmbedSearch(q, 1)));
+  const seen = new Set();
+  const videos = [];
+  for (const batch of batches) {
+    for (const video of batch) {
+      const id = aeVideoId(video);
+      if (!id || seen.has(id)) continue;
+      seen.add(id);
+      const searchable = aeText(video).toLowerCase();
+      const germanDub = /german dub|german dubbed|deutsch synchronisiert|deutsche synchronisation|ger dub/.test(searchable);
+      const hentai = /hentai|anime|animated/.test(searchable);
+      const salieri = /mario salieri|salieri/.test(searchable);
+      if (catalogId === "xh_german_all" && !germanDub) continue;
+      if (catalogId === "xh_hentai_german_dub" && !(germanDub && hentai)) continue;
+      if (catalogId === "xh_mario_salieri_german_dub" && !(germanDub && salieri)) continue;
+      videos.push(video);
+    }
+  }
+  return videos.slice(skip, skip + 40).map(video => {
+    const id = aeVideoId(video);
+    const translation = video.translation || {};
+    const poster = video.thumbnail || video.thumb || video.image || video.poster;
+    return {
+      id: "ae:" + id, type: "movie",
+      name: String(translation.title || video.title || "AdultEmbed Video"),
+      poster: poster || undefined, background: poster || undefined,
+      posterShape: "landscape",
+      description: String(translation.description || video.description || ""),
+      url: aePlayerUrl(video) || undefined
+    };
+  });
+}
+async function adultEmbedMetadata(id) {
+  const videoId = aeIdFromId(id);
+  if (!videoId) return null;
+  const response = await fetch(AE_API + "/videos/" + encodeURIComponent(videoId) + "?lang=de", { headers: { Accept: "application/json" } });
+  if (!response.ok) return null;
+  const data = await response.json();
+  const video = data.video || data;
+  if (!video || !aeVideoId(video)) return null;
+  const translation = video.translation || {};
+  const poster = video.thumbnail || video.thumb || video.image || video.poster;
+  return {
+    id: "ae:" + videoId, type: "movie",
+    name: String(translation.title || video.title || "AdultEmbed Video"),
+    poster: poster || undefined, background: poster || undefined,
+    posterShape: "landscape",
+    description: String(translation.description || video.description || ""),
+    url: aePlayerUrl(video) || (AE_BASE + "/player/embed/" + encodeURIComponent(videoId) + "/")
+  };
+}
+async function adultEmbedStreams(id) {
+  const videoId = aeIdFromId(id);
+  if (!videoId) return [];
+  const meta = await adultEmbedMetadata(id);
+  const playerUrl = meta?.url || (AE_BASE + "/player/embed/" + encodeURIComponent(videoId) + "/");
+  return [{ name: "CVN AdultEmbed Player", title: meta?.name || "AdultEmbed", url: playerUrl }];
 }
 
 function epIdFromId(id) {
@@ -212,7 +304,10 @@ const CATALOG_SEARCHES = {
   xh_german_all: "German Dub"
 };
 async function catalog(args) {
-  const epMetas = await epornerCatalog(args.id, Math.max(0, Number(args.extra?.skip || 0)));
+  const skip = Math.max(0, Number(args.extra?.skip || 0));
+  const [epMetas, aeMetas] = await Promise.all([
+    epornerCatalog(args.id, skip), adultEmbedCatalog(args.id, skip)
+  ]);
   const search = String(args.extra?.search || CATALOG_SEARCHES[args.id] || "").trim();
   const skip = Math.max(0, Number(args.extra?.skip || 0));
   if (!search) {
@@ -220,13 +315,17 @@ async function catalog(args) {
     const html = await getHtml(BASE + "/");
     const links = videoLinks(html);
     const metas = await Promise.all(links.slice(skip, skip + 40).map(pageMeta));
-    return { metas: [...metas.filter(Boolean), ...epMetas], cacheMaxAge: 900 };
+    return { metas: [...metas.filter(Boolean), ...epMetas, ...aeMetas], cacheMaxAge: 900 };
   }
   const links = await searchVideoLinks(search);
   const metas = await Promise.all(links.slice(skip, skip + 40).map(pageMeta));
-  return { metas: [...metas.filter(Boolean), ...epMetas], cacheMaxAge: 300 };
+  return { metas: [...metas.filter(Boolean), ...epMetas, ...aeMetas], cacheMaxAge: 300 };
 }
 async function metadata(id) {
+  if (String(id || "").startsWith("ae:")) {
+    const meta = await adultEmbedMetadata(id);
+    return { meta: meta || { id: String(id), type: "movie", name: "AdultEmbed Video" } };
+  }
   if (String(id || "").startsWith("ep:")) {
     const meta = await epornerMetadata(id);
     return { meta: meta || { id: String(id), type: "movie", name: "Eporner Video" } };
@@ -248,6 +347,7 @@ async function metadata(id) {
   };
 }
 async function streams(id) {
+  if (String(id || "").startsWith("ae:")) return { streams: await adultEmbedStreams(id) };
   if (String(id || "").startsWith("ep:")) return { streams: await epornerStreams(id) };
   const url = urlFromId(id);
   if (!url) return { streams: [] };
@@ -317,4 +417,4 @@ async function streams(id) {
     }))
   };
 }
-module.exports = { catalog, metadata, streams, videoLinks, urlFromId, epornerSearch };
+module.exports = { catalog, metadata, streams, videoLinks, urlFromId, epornerSearch, adultEmbedSearch };
