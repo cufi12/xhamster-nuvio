@@ -154,7 +154,15 @@ async function streams(id) {
     streams: urls.slice(0, 5).map(u => ({
       name: "CVN xHamster",
       title,
-      url: u
+      url: u,
+      behaviorHints: {
+        proxyHeaders: {
+          request: {
+            Referer: url,
+            Origin: "https://ge.xhamster.com"
+          }
+        }
+      }
     }))
   };
 }
