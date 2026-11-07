@@ -1,8 +1,18 @@
 # CVN-xHamster Deutsch für Nuvio
 
-Community-Provider für die normale Filmsuche in Nuvio. Der Provider wird über das Manifest eingebunden; er stellt keine eigene Katalog- oder Browsing-Oberfläche bereit.
+Community-Projekt mit zwei getrennten Komponenten: einem lokalen Nuvio-Stream-Provider und einem eigenständigen Stremio-kompatiblen Katalog-Addon.
 
-## Installation
+## xHamster-Katalog-Addon
+
+Der Katalog ist neu und getrennt vom lokalen Plugin. Er bietet einen Feed, eine Suchfunktion, Videodetails und – sofern eine direkt eingebettete öffentliche HLS-Adresse vorhanden ist – Streams.
+
+**Das Addon ist noch nicht öffentlich bereitgestellt.** Es muss zuerst auf einem Node.js-Host laufen. Ein Render-Blueprint liegt in `render.yaml`. Beim Deployment den Branch `add-xhamster-provider` auswählen. Render soll das Verzeichnis `addon` als Root verwenden und `npm start` ausführen.
+
+Nach erfolgreichem Deployment die vom Host ausgegebene URL mit `/manifest.json` in Nuvio unter **Addons** hinzufügen. Beispiel: `https://DEINE-DOMAIN/manifest.json`. Die GitHub-Raw-Manifest-URL des Nuvio-Plugins ist hierfür nicht geeignet.
+
+Details und lokale Startanleitung: [addon/README.md](addon/README.md).
+
+## Bestehender Nuvio-Stream-Provider
 
 Manifest-URL:
 
@@ -17,7 +27,7 @@ In Nuvio als **Plugin-Repository** hinzufügen – nicht im Bereich „Addons“
 
 Die Menübezeichnungen können je nach App-Version leicht abweichen. Nicht jede Nuvio-Version unterstützt Plugins; bei fehlendem Plugin-Menü zuerst prüfen, ob die installierte App-Version Plugins unterstützt.
 
-## Aktueller Stand
+## Aktueller Stand des Providers
 
 Aktuelle Version: **1.9.8**
 
@@ -31,23 +41,24 @@ Aktuelle Version: **1.9.8**
 
 ## Deutsche Sprache: noch nicht verifiziert
 
-Der Provider kann derzeit **nicht feststellen**, ob ein Treffer deutsche Originalsprache, deutsche Synchronisation oder überhaupt eine deutschsprachige Tonspur enthält. Auch der deutsche Such-Host und ein passender Filmtitel sind dafür kein Beleg. Deshalb wird im Manifest keine bestätigte Inhaltssprache mehr deklariert. Der Name „Deutsch“ beschreibt aktuell das Projektziel, nicht eine garantierte Eigenschaft jedes gefundenen Streams.
+Der Provider kann derzeit **nicht feststellen**, ob ein Treffer deutsche Originalsprache, deutsche Synchronisation oder überhaupt eine deutschsprachige Tonspur enthält. Auch der deutsche Such-Host und ein passender Filmtitel sind dafür kein Beleg. Deshalb wird im Manifest keine bestätigte Inhaltssprache deklariert. Der Name „Deutsch“ beschreibt aktuell das Projektziel, nicht eine garantierte Eigenschaft jedes gefundenen Streams.
 
 Ein echter Deutschfilter benötigt verlässliche, öffentlich zugängliche Sprach-/Audio-Metadaten und eine erlaubte Integrationsmethode. Solange diese fehlen, werden Treffer nicht als deutsch verifiziert ausgegeben.
 
 ## Wichtige Einschränkungen
 
-Die aktuelle Implementierung ist ein experimenteller Community-Provider und keine offizielle xHamster-Integration. Es gibt derzeit keine bestätigte offizielle API-/RSS-Freigabe oder Partnerschaft.
+Beide Komponenten sind experimentelle Community-Integrationen und keine offizielle xHamster-Integration. Es gibt derzeit keine bestätigte offizielle API-/RSS-Freigabe oder Partnerschaft.
 
-Der Provider umgeht keine Anmeldung, Altersprüfung, CAPTCHA-, DRM- oder Anti-Bot-Schutzmechanismen. Verfügbarkeit und Wiedergabe hängen von xHamster, Nuvio und den jeweils geltenden Zugriffsbedingungen ab.
+Der Katalog und Provider verwenden nur öffentlich erreichbare Seiten und direkt eingebettete Medienadressen. Sie umgehen keine Anmeldung, Altersprüfung, CAPTCHA-, DRM- oder Anti-Bot-Schutzmechanismen. Verfügbarkeit und Wiedergabe hängen von xHamster, Nuvio und den jeweils geltenden Zugriffsbedingungen ab.
 
 ## Automatische Prüfungen
 
-GitHub Actions prüft bei Änderungen auf diesem Branch die JavaScript-Syntax, das Manifest und den Provider-Vertrag. Ein simulierter Laufzeittest prüft eine TMDB-Antwort, eine passende Videoseite, einen HLS-Stream, die Ablehnung nicht passender Titel, nicht unterstützte Serien und einen fehlenden API-Schlüssel. Diese Tests ersetzen keinen echten Wiedergabetest innerhalb der Nuvio-App.
+GitHub Actions prüft die JavaScript-Syntax des Providers und Katalog-Addons, den Provider-Vertrag sowie simulierte Katalogsuche, Metadaten, ID-Validierung und HLS-Extraktion. Diese Tests ersetzen keinen echten Wiedergabetest innerhalb der Nuvio-App.
 
 ## Entwicklung
 
-Aktiver Provider: `providers/xhamster.js`
+- Lokaler Nuvio-Provider: `providers/xhamster.js`
+- Katalog-Addon: `addon/`
 
 Änderungen erfolgen auf dem Branch `add-xhamster-provider`. Die Standard- bzw. Hauptbranch wird dadurch nicht verändert.
 
