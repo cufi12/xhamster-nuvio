@@ -319,8 +319,9 @@ async function epornerStreams(id) {
     data = await requestJson(EP_API + "?" + searchParams.toString());
     video = unwrapVideo(data);
   }
-  if (!video) return [];
-
+  // The official Eporner ID API documents metadata fields, not playable media
+  // URLs. Some responses therefore contain a valid video but no sources.
+  // Read only directly exposed MP4/HLS URLs from the public embed HTML as fallback.
   const candidates = [];
   const add = (value, quality) => {
     if (value && typeof value === "object") {
@@ -368,6 +369,23 @@ async function epornerStreams(id) {
     }
   };
   walkSources(video.sources);
+
+  // The public API's documented ID response contains metadata only. The
+  // embed page may expose the same public player sources directly in its HTML.
+  // Never execute its scripts, decode obfuscated payloads, or bypass restrictions.
+  try {
+    const embedHtml = await getHtml(EP_BASE + "/embed/" + encodeURIComponent(videoId));
+    if (embedHtml) {
+      const visibleHtml = decode(embedHtml);
+      const mediaPattern = /https:\/\/[^"'\\s<>]+?\.(?:mp4|m3u8)(?:\?[^"'\\s<>]*)?/gi;
+      let mediaMatch;
+      while ((mediaMatch = mediaPattern.exec(visibleHtml)) !== null) {
+        add(mediaMatch[0], "");
+      }
+    }
+  } catch (error) {
+    console.warn("[CVN stream] Eporner embed source lookup failed:", error?.message || error);
+  }
 
   const uniqueCandidates = [];
   const seen = new Set();
