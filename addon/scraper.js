@@ -19,6 +19,9 @@ function absolute(value) {
   return "";
 }
 function unique(values) { return [...new Set(values.filter(Boolean))]; }
+function isGermanDub(value) {
+  return /german dub(?:bed)?|ger dub|german audio|german voice|deutsch synchronisiert|deutsche synchronisation|deutsch vertont|deutsche tonspur|deutsche synchro/.test(String(value || "").toLowerCase());
+}
 function textFromHtml(value) {
   return decode(value.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ")).trim();
 }
@@ -240,12 +243,12 @@ async function epornerCatalog(catalogId, skip) {
       if (!id || seen.has(id)) continue;
       seen.add(id);
       const searchable = (String(video.title || "") + " " + epTags(video)).toLowerCase();
-      const german = /german|deutsch|deutsche|deutschsprachig|german dub|ger dub/.test(searchable);
+      const germanDub = isGermanDub(searchable);
       const hentai = /hentai|anime|animated/.test(searchable);
       const salieri = /mario salieri|salieri/.test(searchable);
-      if (catalogId === "xh_hentai_german_dub" && !(german && hentai)) continue;
-      if (catalogId === "xh_mario_salieri_german_dub" && !(german && salieri)) continue;
-      if (catalogId === "xh_german_all" && !german) continue;
+      if (["xh_german_studio", "xh_german_all"].includes(catalogId) && !germanDub) continue;
+      if (catalogId === "xh_hentai_german_dub" && !(germanDub && hentai)) continue;
+      if (catalogId === "xh_mario_salieri_german_dub" && !(germanDub && salieri)) continue;
       videos.push(video);
     }
   }
@@ -320,7 +323,8 @@ async function catalog(args) {
   }
   const links = await searchVideoLinks(search);
   const metas = await Promise.all(links.slice(skip, skip + 40).map(pageMeta));
-  return { metas: [...metas.filter(Boolean), ...epMetas, ...aeMetas], cacheMaxAge: 300 };
+  const germanMetas = metas.filter(meta => meta && isGermanDub([meta.name, meta.description].join(" ")));
+  return { metas: [...germanMetas, ...epMetas, ...aeMetas], cacheMaxAge: 300 };
 }
 async function metadata(id) {
   if (String(id || "").startsWith("ae:")) {
