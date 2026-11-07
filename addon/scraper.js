@@ -309,7 +309,6 @@ async function catalog(args) {
     epornerCatalog(args.id, skip), adultEmbedCatalog(args.id, skip)
   ]);
   const search = String(args.extra?.search || CATALOG_SEARCHES[args.id] || "").trim();
-  const skip = Math.max(0, Number(args.extra?.skip || 0));
   if (!search) {
     // The front page is a public, ordinary listing; no access controls are bypassed.
     const html = await getHtml(BASE + "/");
