@@ -1,16 +1,15 @@
 {
   "name": "CVN-xHamster Deutsch",
-  "version": "1.9.7",
+  "version": "1.9.8",
   "scrapers": [
     {
       "id": "xhamster",
       "name": "CVN-xHamster Deutsch",
       "description": "Experimenteller xHamster-Provider; deutsche Sprache nicht verifiziert",
-      "version": "1.9.7",
+      "version": "1.9.8",
       "author": "cufi12",
       "supportedTypes": [
-        "movie",
-        "other"
+        "movie"
       ],
       "filename": "providers/xhamster.js",
       "enabled": true,
