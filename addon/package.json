@@ -1,0 +1,17 @@
+{
+  "name": "cvn-xhamster-catalog",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Community Stremio-compatible catalog addon for Nuvio",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "check": "node --check server.js && node --check scraper.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "stremio-addon-sdk": "^1.6.10"
+  }
+}
