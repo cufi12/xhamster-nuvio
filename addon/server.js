@@ -11,9 +11,9 @@ const manifest = {
   idPrefixes: ["xh:"],
   catalogs: [
     { type: "movie", id: "xh_german_studio", name: "Deutsche Filme" },
+    { type: "movie", id: "xh_german_all", name: "German Dub" },
     { type: "movie", id: "xh_hentai_german_dub", name: "Hentai Dub" },
-    { type: "movie", id: "xh_mario_salieri_german_dub", name: "Salieri German Dub" },
-    { type: "movie", id: "xh_german_all", name: "German Dub" }
+    { type: "movie", id: "xh_mario_salieri_german_dub", name: "Salieri German Dub" }
   ],
   behaviorHints: { adult: true, configurable: false }
 };
