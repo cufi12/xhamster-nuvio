@@ -1,12 +1,12 @@
 {
   "name": "CVN Gratis-Katalog",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "scrapers": [
     {
       "id": "cvn-de-studios",
       "name": "CVN · Deutsche Studios",
       "description": "Deutsche Studios und Produktionen. Derzeit deaktiviert, bis kostenlose und autorisierte Quellen technisch getestet sind.",
-      "version": "1.2.0",
+      "version": "1.2.1",
       "author": "CVN",
       "supportedTypes": [
         "movie"
@@ -21,7 +21,7 @@
       "id": "cvn-german-dub-world",
       "name": "CVN · German Dub · Aller Welt",
       "description": "Internationale Filme mit nachgewiesener deutscher Synchron-Tonspur. Derzeit deaktiviert, bis Quellen und Wiedergabe geprüft sind.",
-      "version": "1.2.0",
+      "version": "1.2.1",
       "author": "CVN",
       "supportedTypes": [
         "movie"
@@ -36,7 +36,7 @@
       "id": "cvn-hentai-german-dub",
       "name": "CVN · Hentai · German Dub",
       "description": "Japanische Hentai-Filme und Serien mit deutscher Synchronisation. Derzeit deaktiviert, bis Quellen und Wiedergabe geprüft sind.",
-      "version": "1.2.0",
+      "version": "1.2.1",
       "author": "CVN",
       "supportedTypes": [
         "movie",
