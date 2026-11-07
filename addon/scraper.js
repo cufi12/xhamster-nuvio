@@ -162,6 +162,8 @@ async function pageMeta(url) {
     id: makeId(url), type: "movie", name, poster: poster || undefined,
     description: [description, audioNote].filter(Boolean).join(" "),
     audioLanguage: audioLanguage || undefined,
+    germanDubMarker: isGermanDub([name, description].join(" ")),
+    germanLanguageMarker: /\\b(german|deutsch|germany|deutsche[nrms]?)\\b/i.test([name, description].join(" ")),
     posterShape: "landscape", background: poster || undefined, url
   };
 }
