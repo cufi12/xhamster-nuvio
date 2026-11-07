@@ -4,7 +4,7 @@ const scraper = require("./scraper");
 const page = "https://ge.xhamster.com/videos/sample-123";
 const html = {
   "https://ge.xhamster.com/search/sample": '<a href="/videos/sample-123">Sample Clip</a>',
-  [page]: '<meta property="og:title" content="Sample Clip"><meta property="og:image" content="https://cdn.example.test/poster.jpg"><meta property="og:description" content="Test description"><script>{"contentUrl":"https://cdn.example.test/video.m3u8"}</script>'
+  [page]: '<meta property="og:title" content="Sample Clip"><meta property="og:image" content="https://cdn.example.test/poster.jpg"><meta property="og:description" content="Test description"><script id="initials-script">{"xplayerSettings":{"sources":{"hls":{"h264":[{"url":"https://cdn.example.test/video.m3u8"}]}}}}</script><script>{"contentUrl":"https://cdn.example.test/video.m3u8"}</script>'
 };
 global.fetch = async url => ({
   ok: Boolean(html[String(url)]),
