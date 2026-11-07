@@ -8,7 +8,14 @@ Manifest-URL:
 
 `https://raw.githubusercontent.com/cufi12/xhamster-nuvio/add-xhamster-provider/manifest.json`
 
-In Nuvio bzw. einer kompatiblen Nuvio-basierten App als Plugin-Manifest hinzufügen.
+In Nuvio als **Plugin-Repository** hinzufügen – nicht im Bereich „Addons“:
+
+1. In Nuvio **Einstellungen → Inhalt & Entdeckung → Plugins** öffnen.
+2. **Repository hinzufügen** wählen und die Manifest-URL oben einfügen.
+3. Repository aktualisieren und den Provider **CVN-xHamster Deutsch** in der Providerliste aktivieren.
+4. Falls der Provider Einstellungen anbietet, den eigenen TMDB-API-Schlüssel dort eintragen.
+
+Die Menübezeichnungen können je nach App-Version leicht abweichen. Nicht jede Nuvio-Version unterstützt Plugins; bei fehlendem Plugin-Menü zuerst prüfen, ob die installierte App-Version Plugins unterstützt.
 
 ## Aktueller Stand
 
