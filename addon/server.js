@@ -3,9 +3,9 @@ const scraper = require("./scraper");
 
 const manifest = {
   id: "community.cvn.xhamster.catalog",
-  version: "0.1.9",
-  name: "CVN xHamster Katalog",
-  description: "Community-Katalog mit öffentlicher xHamster-Suche und Videodetails.",
+  version: "0.2.0",
+  name: "CVN Deutsch-Katalog",
+  description: "xHamster-Suche mit getrennten deutschen Suchkategorien; Dub-Angaben bleiben bis zum Audionachweis unverifiziert.",
   resources: ["catalog", "meta", "stream"],
   types: ["movie"],
   idPrefixes: ["xh:", "ep:", "ae:"],
@@ -14,7 +14,7 @@ const manifest = {
     { type: "movie", id: "xh_german_all", name: "German Dub", showInHome: true, pageSize: 40 },
     { type: "movie", id: "xh_hentai_german_dub", name: "Hentai Dub", showInHome: true, pageSize: 40 },
     { type: "movie", id: "xh_mario_salieri_german_dub", name: "Salieri German Dub", showInHome: true, pageSize: 40 },
-    { type: "movie", id: "xh_free_german_platforms", name: "Kostenlos Deutsch – Plattformmix", showInHome: true, pageSize: 40 }
+    { type: "movie", id: "xh_free_german_platforms", name: "Weitere Dub-Suchtreffer (xHamster)", showInHome: true, pageSize: 40 }
   ],
   behaviorHints: { adult: true, configurable: false }
 };
