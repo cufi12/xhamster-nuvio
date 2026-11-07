@@ -1,8 +1,7 @@
-// Deutsche Studios & Klassiker
-// Safe placeholder: no provider source has been verified for this category yet.
-// Return no streams rather than inventing URLs or bypassing site protections.
+// Deutsche Studios
+// Placeholder until lawful public sources and playback are verified.
 function getStreams() {
-  console.log("[CVN] Deutsche Studios & Klassiker: no verified public streams configured yet.");
+  console.log("[CVN] Deutsche Studios: no verified lawful streams configured yet.");
   return Promise.resolve([]);
 }
 
