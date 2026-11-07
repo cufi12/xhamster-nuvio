@@ -12,6 +12,7 @@ const manifest = {
   catalogs: [
     { type: "movie", id: "xh_german_studio", name: "Deutsch – Studio-Produktionen" },
     { type: "movie", id: "xh_german_dub", name: "Deutsch – German Dub" },
+    { type: "movie", id: "xh_mario_salieri_german_dub", name: "Mario Salieri – German Dub" },
     { type: "movie", id: "xh_german_new", name: "Deutsch – Neue Videos" },
     { type: "movie", id: "xh_german_popular", name: "Deutsch – Beliebt" },
     { type: "movie", id: "xh_latest", name: "xHamster – Neu" },
