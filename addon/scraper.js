@@ -309,12 +309,15 @@ async function epornerStreams(id) {
     return response.json();
   };
   let data = await requestJson(EP_BASE + "/api/v2/video/id/?" + detailParams.toString());
-  let video = data?.video || (Array.isArray(data?.videos) ? data.videos[0] : null) ||
-    (data && data.id ? data : null);
+  const unwrapVideo = payload => {
+    const root = payload?.data || payload;
+    return root?.video || (Array.isArray(root?.videos) ? root.videos[0] : null) ||
+      (Array.isArray(root) ? root[0] : null) || (root && root.id ? root : null);
+  };
+  let video = unwrapVideo(data);
   if (!video) {
     data = await requestJson(EP_API + "?" + searchParams.toString());
-    video = (Array.isArray(data?.videos) ? data.videos[0] : null) ||
-      (Array.isArray(data) ? data[0] : null);
+    video = unwrapVideo(data);
   }
   if (!video) return [];
 
@@ -345,6 +348,26 @@ async function epornerStreams(id) {
   if (Array.isArray(video.qualities)) {
     for (const source of video.qualities) add(source);
   }
+
+  // Eporner's API may group playable files as sources.hls/mp4 -> quality -> {src/url}.
+  // Walk only the API-provided source object; add() still enforces HTTPS media URLs
+  // and the provider's own delivery domain.
+  const walkSources = (node, quality = "") => {
+    if (!node) return;
+    if (Array.isArray(node)) {
+      for (const item of node) walkSources(item, quality);
+      return;
+    }
+    if (typeof node !== "object") return;
+    const label = String(node.quality || node.label || node.format || quality || "");
+    if (typeof node.src === "string" || typeof node.url === "string" || typeof node.file === "string") {
+      add(node, label);
+    }
+    for (const [key, value] of Object.entries(node)) {
+      if (value && typeof value === "object") walkSources(value, /^(?:hls|mp4)$/i.test(key) ? key : label || key);
+    }
+  };
+  walkSources(video.sources);
 
   const uniqueCandidates = [];
   const seen = new Set();
@@ -506,6 +529,25 @@ async function streams(id) {
           }
         }
       }
+
+      // Newer public page payloads may expose plain MP4/HLS URLs under
+      // initials.videoModel.sources. Ignore encrypted/non-URL values; do not
+      // attempt to decode protected player payloads.
+      const walkPublicSources = node => {
+        if (!node) return;
+        if (Array.isArray(node)) {
+          for (const item of node) walkPublicSources(item);
+          return;
+        }
+        if (typeof node === "string") {
+          addCandidate(node);
+          return;
+        }
+        if (typeof node === "object") {
+          for (const value of Object.values(node)) walkPublicSources(value);
+        }
+      };
+      walkPublicSources(initials?.videoModel?.sources);
     } catch (_) {
       // A malformed or non-JSON player payload is not a playable source.
     }
