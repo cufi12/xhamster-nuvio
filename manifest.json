@@ -1,21 +1,29 @@
 {
   "name": "CVN Gratis-Katalog",
-  "version": "1.2.1",
+  "version": "1.3.0",
   "scrapers": [
+    {
+      "id": "cvn-xhamster",
+      "name": "xHamster",
+      "description": "xHamster-Suche für Filme über TMDB-Titelauflösung und den verbundenen Apify-Backend-Dienst.",
+      "version": "1.0.0",
+      "author": "CVN",
+      "supportedTypes": ["movie"],
+      "filename": "providers/xhamster.js",
+      "enabled": true,
+      "hasSettings": true,
+      "contentLanguage": ["und"]
+    },
     {
       "id": "cvn-de-studios",
       "name": "CVN · Deutsche Studios",
       "description": "Deutsche Studios und Produktionen. Derzeit deaktiviert, bis kostenlose und autorisierte Quellen technisch getestet sind.",
       "version": "1.2.1",
       "author": "CVN",
-      "supportedTypes": [
-        "movie"
-      ],
+      "supportedTypes": ["movie"],
       "filename": "providers/de-classics.js",
       "enabled": false,
-      "contentLanguage": [
-        "de"
-      ]
+      "contentLanguage": ["de"]
     },
     {
       "id": "cvn-german-dub-world",
@@ -23,14 +31,10 @@
       "description": "Internationale Filme mit nachgewiesener deutscher Synchron-Tonspur. Derzeit deaktiviert, bis Quellen und Wiedergabe geprüft sind.",
       "version": "1.2.1",
       "author": "CVN",
-      "supportedTypes": [
-        "movie"
-      ],
+      "supportedTypes": ["movie"],
       "filename": "providers/german-dub.js",
       "enabled": false,
-      "contentLanguage": [
-        "de"
-      ]
+      "contentLanguage": ["de"]
     },
     {
       "id": "cvn-hentai-german-dub",
@@ -38,15 +42,10 @@
       "description": "Japanische Hentai-Filme und Serien mit deutscher Synchronisation. Derzeit deaktiviert, bis Quellen und Wiedergabe geprüft sind.",
       "version": "1.2.1",
       "author": "CVN",
-      "supportedTypes": [
-        "movie",
-        "tv"
-      ],
+      "supportedTypes": ["movie", "tv"],
       "filename": "providers/hentai-jp.js",
       "enabled": false,
-      "contentLanguage": [
-        "de"
-      ]
+      "contentLanguage": ["de"]
     }
   ]
 }
