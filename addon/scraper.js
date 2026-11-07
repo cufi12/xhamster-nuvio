@@ -461,17 +461,17 @@ async function epornerStreams(id) {
     const qb = Number((b.quality.match(/\d+/) || [0])[0]);
     return qb - qa;
   });
-  // Probe only the response headers and a tiny byte range before exposing a
-  // candidate to Nuvio. This distinguishes a reachable media file from a
-  // stale URL or a source that rejects ordinary server-side playback requests.
-  if (uniqueCandidates.length) {
-    const probe = uniqueCandidates[0].url;
+  // Probe each candidate and expose only sources that answer with a successful
+  // media response. A 403/404 page is not a playable stream and must never be
+  // shown as one in Nuvio. This does not attempt to bypass provider restrictions.
+  const playableCandidates = [];
+  for (const candidate of uniqueCandidates.slice(0, 5)) {
     try {
-      const response = await fetch(probe, {
+      const response = await fetch(candidate.url, {
         method: "GET",
         headers: {
           Range: "bytes=0-1",
-          Accept: "video/*,application/vnd.apple.mpegurl,*/*",
+          Accept: "video/*,application/vnd.apple.mpegurl,application/x-mpegURL,*/*",
           "User-Agent": "Mozilla/5.0",
           Referer: EP_BASE + "/",
           Origin: EP_BASE
@@ -479,22 +479,25 @@ async function epornerStreams(id) {
         redirect: "follow",
         signal: AbortSignal.timeout(8000)
       });
-      const host = new URL(response.url || probe).hostname.toLowerCase();
+      const host = new URL(response.url || candidate.url).hostname.toLowerCase();
+      const contentType = (response.headers.get("content-type") || "").toLowerCase();
+      const status = response.status;
+      const mediaType = /^(?:video\\/|application\\/(?:vnd\\.apple\\.mpegurl|x-mpegurl|mpegurl))/.test(contentType);
+      const reachable = (status === 200 || status === 206) && mediaType;
       console.info("[CVN stream] Eporner probe", JSON.stringify({
-        host,
-        status: response.status,
-        contentType: response.headers.get("content-type") || "",
+        host, status, contentType,
         contentRange: response.headers.get("content-range") || "",
-        acceptRanges: response.headers.get("accept-ranges") || ""
+        playable: reachable
       }));
       if (response.body) await response.body.cancel().catch(() => {});
+      if (reachable) playableCandidates.push(candidate);
     } catch (error) {
       console.warn("[CVN stream] Eporner probe failed", String(error?.name || "Error"));
     }
   }
 
   const title = String(video.title || "Eporner");
-  return uniqueCandidates.slice(0, 5).map(candidate => ({
+  return playableCandidates.map(candidate => ({
     name: "CVN Eporner",
     title: title + (candidate.quality ? " · " + candidate.quality : ""),
     url: candidate.url,
