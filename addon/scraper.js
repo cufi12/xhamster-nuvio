@@ -67,14 +67,15 @@ function decodeId(id) {
 }
 
 function actorInput(args = {}) {
+  const filters = args.extra && typeof args.extra === "object" ? { ...args, ...args.extra } : args;
   const input = { maxVideos: MAX_VIDEOS, withDetails: true };
-  const sort = SORTS.has(String(args.sort || "")) ? String(args.sort) : "relevance";
+  const sort = SORTS.has(String(filters.sort || "")) ? String(filters.sort) : "relevance";
   input.sort = sort;
-  const search = asText(args.search);
+  const search = asText(filters.search);
   if (search) input.searchQuery = search.slice(0, 200);
   const fields = ["category", "tag", "pornstar", "channel"];
   for (const field of fields) {
-    const value = asText(args[field]);
+    const value = asText(filters[field]);
     if (value) input[field] = value.slice(0, 160);
   }
   return input;
