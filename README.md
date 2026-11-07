@@ -1,45 +1,33 @@
 # CVN Gratis-Katalog für Nuvio
 
-Dieses Repository ist für die **Nuvio-Provider-Liste** bestimmt, nicht für Stremio-Add-ons.
+## Wichtig: zwei verschiedene Nuvio-Bereiche
 
-## Installation
+Für das Ziel **xHamster direkt durchsuchen und Videos aus dem Katalog auswählen** brauchst du das eigenständige Addon, nicht nur das Nuvio-Plugin.
+
+### xHamster-Katalog (Addons)
+
+Installations-URL für Nuvio unter **Addons**:
+
+https://cvn-xhamster-catalog.onrender.com/manifest.json
+
+Das Addon stellt einen xHamster-Startkatalog sowie einen eigenen Suchkatalog bereit. Es wird auf Render betrieben.
+
+### Nuvio-Provider-Repository (Plugins)
 
 Manifest-URL:
+
 https://raw.githubusercontent.com/cufi12/xhamster-nuvio/add-xhamster-provider/manifest.json
 
-## Provider
+Der darin enthaltene xHamster-Provider ist ein separater, titelbezogener Stream-Provider: Nuvio übergibt dafür eine TMDB-ID. Er ist **nicht** der eigenständige xHamster-Suchkatalog.
 
-### xHamster
+## Grenzen und Wiedergabe
 
-Der Eintrag **xHamster** ist ein eigener Nuvio-Provider (kein Katalog-Addon in Nuvio).
+- Der Katalog zeigt nur Einträge, die der verbundenen Apify-Suche entnommen werden können.
+- Ein sichtbarer Katalogeintrag bedeutet nicht automatisch, dass ein Video in Nuvios Player abspielbar ist.
+- Es werden nur öffentlich erreichbare, direkt freigegebene Medienquellen berücksichtigt, die einen begrenzten Medientyp-Test bestehen.
+- Keine Umgehung von Logins, Altersprüfungen, CAPTCHAs, DRM, Paywalls oder Anti-Bot-Schutz.
+- Technische Erreichbarkeit ist kein Nachweis für Verbreitungsrechte. Bitte nur Inhalte nutzen, für die du zur Wiedergabe berechtigt bist.
 
-- Unterstützt derzeit nur Filme.
-- Nuvio übergibt eine TMDB-ID; der Provider löst den Filmtitel über die TMDB-API auf.
-- In den Einstellungen des Providers muss dafür ein eigener TMDB API Key hinterlegt werden.
-- Die Suche und Prüfung direkter Medienstreams läuft über den bestehenden Apify-Backend-Dienst.
-- Der Apify-Token bleibt ausschließlich als serverseitige Render-Umgebungsvariable gespeichert und wird nicht an Nuvio ausgeliefert.
-- Es werden nur vom Backend als direkte Medien-URLs bestätigte Streams zurückgegeben. Keine Umgehung von Logins, Altersprüfungen, CAPTCHAs, DRM, Paywalls oder Anti-Bot-Schutz.
+## Weitere geplante Kategorien
 
-**Wichtig:** Die technische Erreichbarkeit oder ein direkter Stream-Nachweis ist kein Nachweis für Verbreitungsrechte. Bitte nur Inhalte nutzen, für die du zur Wiedergabe berechtigt bist. Ein echter Nuvio-Provider- und Wiedergabetest steht noch aus.
-
-### Weitere geplante Kategorien
-
-1. **Deutsche Studios** – deutsche Studios und Produktionen.
-2. **German Dub · Aller Welt** – internationale Filme mit tatsächlich deutscher Synchron-Tonspur.
-3. **Hentai · German Dub** – japanische Hentai-Filme und Serien mit tatsächlich deutscher Synchronisation.
-
-Diese drei Provider sind weiterhin deaktiviert, bis kostenlose und autorisierte Quellen sowie die Wiedergabe pro Titel technisch geprüft sind.
-
-## Technischer Status
-
-Das Manifest entspricht dem Nuvio-Plugin-Repositorymodell (PluginManifest) mit name, version und einem scrapers-Array. Nuvio ruft getStreams(tmdbId, mediaType, season, episode) auf und erwartet ein Array von Stream-Objekten (title, url, optional name, quality, language, headers). Die Provider laufen lokal in Nuvios JavaScript-Runtime; der xHamster-Provider greift für Suche und Stream-Prüfung auf den verbundenen Backend-Dienst zu.
-
-Der xHamster-Eintrag ist im Manifest aktiviert, benötigt aber einen TMDB API Key in seinen Provider-Einstellungen. Die drei anderen Provider-Dateien sind Platzhalter und liefern keine Streams; sie bleiben deaktiviert. Ein lokaler Vertragstest ersetzt weder den Nuvio-Provider-Tester noch einen echten Wiedergabetest.
-
-## Tests
-
-Der Provider-Vertrag kann lokal mit Node.js geprüft werden:
-
-    node tests/provider-contract.test.js
-
-Der Test prüft Manifest, Exporte, Einstellungen und sichere Eingabevalidierung. Er ist **kein** End-to-End-Test gegen TMDB, Apify oder den Nuvio-Player.
+Deutsche Studios, German Dub und Hentai German Dub bleiben deaktiviert, bis autorisierte Quellen und die Wiedergabe technisch geprüft sind.
