@@ -1,4 +1,4 @@
-name: Validate provider
+name: Validate provider and catalog addon
 
 on:
   push:
@@ -14,7 +14,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - name: Check JavaScript syntax
+      - name: Check provider JavaScript syntax
         run: node --check providers/xhamster.js
+      - name: Check catalog addon syntax
+        run: cd addon && npm install --ignore-scripts && npm run check
       - name: Validate manifest and provider contract
         run: node tests/validate-provider.mjs
