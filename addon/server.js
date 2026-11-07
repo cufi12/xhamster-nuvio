@@ -3,7 +3,7 @@ const scraper = require("./scraper");
 
 const manifest = {
   id: "community.cvn.xhamster.catalog",
-  version: "0.1.1",
+  version: "0.1.2",
   name: "CVN xHamster Katalog",
   description: "Community-Katalog mit öffentlicher xHamster-Suche und Videodetails.",
   resources: ["catalog", "meta", "stream"],
@@ -13,6 +13,8 @@ const manifest = {
     { type: "movie", id: "xh_german_studio", name: "Deutsch – Studio-Produktionen" },
     { type: "movie", id: "xh_german_dub", name: "Deutsch – German Dub" },
     { type: "movie", id: "xh_mario_salieri_german_dub", name: "Mario Salieri – German Dub" },
+    { type: "movie", id: "xh_anime_german", name: "Anime – Deutsch" },
+    { type: "movie", id: "xh_anime_german_new", name: "Anime – Deutsch – Neue Videos" },
     { type: "movie", id: "xh_hentai_german_dub", name: "Hentai – German Dub" },
     { type: "movie", id: "xh_hentai_german", name: "Hentai – Deutsch" },
     { type: "movie", id: "xh_hentai_german_new", name: "Hentai – Deutsch – Neue Videos" },
