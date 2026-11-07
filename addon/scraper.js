@@ -675,9 +675,9 @@ async function streams(id) {
   const title = metaTag(html, "og:title") || "xHamster";
   // For HLS master playlists, language is confirmed only from an AUDIO rendition's
   // LANGUAGE attribute (not from subtitles or the surrounding page text).
-  let hlsGermanAudio = false;
-  for (const candidate of urls.filter(value => /\\.m3u8(?:$|[?#])/i.test(value)).slice(0, 3)) {
-    if (await hlsAudioLanguage(candidate) === "de") { hlsGermanAudio = true; break; }
+  const hlsGermanAudio = new Set();
+  for (const candidate of urls.filter(value => /\\.m3u8(?:$|[?#])/i.test(value)).slice(0, 5)) {
+    if (await hlsAudioLanguage(candidate) === "de") hlsGermanAudio.add(candidate);
   }
   if (!urls.length) {
     // The page itself is not a playable stream. Keep playback inside Nuvio
@@ -687,7 +687,7 @@ async function streams(id) {
   return {
     streams: urls.slice(0, 5).map(u => ({
       name: "CVN xHamster",
-      title: title + (hlsGermanAudio && /\\.m3u8(?:$|[?#])/i.test(u) ? " · Deutsch (Audio bestätigt)" : ""),
+      title: title + (hlsGermanAudio.has(u) ? " · Deutsch (Audio bestätigt)" : ""),
       url: u,
       behaviorHints: {
         notWebReady: true,
