@@ -53,4 +53,6 @@ Aktiver Provider: `providers/xhamster.js`
 
 ## Sicherheitshinweis
 
-Ein früher im Quellcode enthaltener TMDB-Schlüssel gilt als offengelegt. Bitte diesen Schlüssel im TMDB-Konto widerrufen bzw. ersetzen. Version 1.9.7 enthält keinen fest eingebauten TMDB-Schlüssel; der neue Schlüssel wird über die geschützte Provider-Einstellung `tmdbApiKey` eingegeben.
+Ein früher im Quellcode enthaltener TMDB-Schlüssel gilt als offengelegt. Bitte diesen Schlüssel im TMDB-Konto widerrufen bzw. ersetzen. Version 1.9.7 enthält keinen fest eingebauten TMDB-Schlüssel; der neue Schlüssel wird über die Nuvio-Provider-Einstellung `tmdbApiKey` eingegeben.
+
+**Hinweis zur Sichtbarkeit:** Das Provider-Schema markiert das Feld als Passwortfeld (`isPassword: true`). Im aktuell geprüften NuvioMobile-Code wird dieses Merkmal zwar ausgelesen, aber nicht an das Eingabefeld weitergegeben. Der Schlüssel kann deshalb beim Bearbeiten sichtbar sein. Der Eintrag wird von Nuvio lokal als Provider-Einstellung gespeichert; behandle ihn in der App daher weiterhin vertraulich.
