@@ -13,7 +13,8 @@ const manifest = {
     { type: "movie", id: "xh_german_studio", name: "Deutsche Filme", showInHome: true, pageSize: 40 },
     { type: "movie", id: "xh_german_all", name: "German Dub", showInHome: true, pageSize: 40 },
     { type: "movie", id: "xh_hentai_german_dub", name: "Hentai Dub", showInHome: true, pageSize: 40 },
-    { type: "movie", id: "xh_mario_salieri_german_dub", name: "Salieri German Dub", showInHome: true, pageSize: 40 }
+    { type: "movie", id: "xh_mario_salieri_german_dub", name: "Salieri German Dub", showInHome: true, pageSize: 40 },
+    { type: "movie", id: "xh_free_german_platforms", name: "Kostenlos Deutsch – Plattformmix", showInHome: true, pageSize: 40 }
   ],
   behaviorHints: { adult: true, configurable: false }
 };
