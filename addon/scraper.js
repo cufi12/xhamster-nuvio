@@ -131,12 +131,13 @@ async function runActor(input) {
 }
 
 function catalogIds() {
-  return new Set(["xh_search", "xh_category", "xh_tag", "xh_creator", "xh_channel"]);
+  return new Set(["xh_latest", "xh_search", "xh_category", "xh_tag", "xh_creator", "xh_channel"]);
 }
 
 async function catalog(args = {}) {
   if (args.type !== "movie" || !catalogIds().has(String(args.id || ""))) return { metas: [], cacheMaxAge: 300 };
   const input = actorInput(args);
+  if (args.id === "xh_latest") input.sort = "newest";
   const idToField = { xh_category: "category", xh_tag: "tag", xh_creator: "pornstar", xh_channel: "channel" };
   const field = idToField[args.id];
   if (field && !input[field]) return { metas: [], cacheMaxAge: 120 };
@@ -162,7 +163,6 @@ async function getVideo(id) {
   const decoded = decodeId(id);
   if (!decoded) return null;
   if (videoCache.has(id)) return videoCache.get(id);
-  // Rehydrate after a process restart by asking the same Actor for this exact public page URL.
   const items = await runActor({ maxVideos: MAX_VIDEOS, withDetails: true, searchQuery: decoded.pageUrl, sort: "relevance" });
   const match = items.map(normalize).find(video => video.pageUrl === decoded.pageUrl);
   if (match) videoCache.set(id, match);
@@ -199,7 +199,6 @@ async function verifyMediaUrl(candidate) {
     if (!["http:", "https:"].includes(url.protocol)) return null;
   } catch { return null; }
 
-  // HEAD first; fall back to a one-byte range request for hosts that reject HEAD.
   for (const method of ["HEAD", "GET"]) {
     try {
       const response = await fetch(url, {
