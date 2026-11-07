@@ -71,6 +71,16 @@ globalThis.fetch = async (url) => {
 
 try {
   const provider = require("../providers/xhamster.js");
+  const settingsSchema = provider.onSettings();
+  assert.ok(Array.isArray(settingsSchema), "Provider settings must be an array.");
+  const apiKeySetting = settingsSchema.find((setting) => setting.key === "tmdbApiKey");
+  assert.ok(apiKeySetting, "TMDB API key setting must be exposed.");
+  assert.equal(apiKeySetting.type, "text");
+  assert.equal(apiKeySetting.isPassword, true, "API key input must be masked.");
+  assert.ok(apiKeySetting.label && apiKeySetting.description);
+  assert.ok(!JSON.stringify(settingsSchema).includes("test-key-only"),
+    "Settings schema must not expose a configured secret.");
+
   const streams = await provider.getStreams("12345", "movie");
 
   assert.equal(streams.length, 1);
