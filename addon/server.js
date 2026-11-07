@@ -3,13 +3,14 @@ const scraper = require("./scraper");
 
 const manifest = {
   id: "community.nuvio.xhamster.apify",
-  version: "1.2.0",
+  version: "1.3.0",
   name: "xHamster Explorer (Apify)",
-  description: "Suche und Entdeckung über den konfigurierten Apify Actor. Wiedergabe wird nur angeboten, wenn ein direkter Medienstream verifiziert vorliegt.",
+  description: "xHamster-Kollektion und Suche über den konfigurierten Apify Actor. Wiedergabe wird nur angeboten, wenn ein direkter Medienstream verifiziert vorliegt.",
   resources: ["catalog", "meta", "stream"],
   types: ["movie"],
   idPrefixes: ["xh:"],
   catalogs: [
+    { type: "movie", id: "xh_latest", name: "xHamster", extra: [], showInHome: true, pageSize: 40 },
     { type: "movie", id: "xh_search", name: "xHamster · Suche", extra: [{ name: "search", isRequired: false }, { name: "sort", isRequired: false, options: ["relevance", "newest", "best"] }], showInHome: true, pageSize: 40 },
     { type: "movie", id: "xh_category", name: "xHamster · Kategorie", extra: [{ name: "category", isRequired: false }, { name: "sort", isRequired: false, options: ["relevance", "newest", "best"] }], showInHome: false, pageSize: 40 },
     { type: "movie", id: "xh_tag", name: "xHamster · Tag", extra: [{ name: "tag", isRequired: false }, { name: "sort", isRequired: false, options: ["relevance", "newest", "best"] }], showInHome: false, pageSize: 40 },
