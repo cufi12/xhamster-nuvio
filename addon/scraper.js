@@ -46,7 +46,7 @@ function normalize(item) {
     (typeof tagsValue === "string" ? tagsValue.split(/[,|]/).map(s => s.trim()).filter(Boolean) : []);
   const views = first(item, ["views", "viewCount"]);
   const date = asText(first(item, ["publishedAt", "uploadDate", "date", "createdAt"]));
-  return { title, pageUrl, poster, description, duration, creator, channel, tags, views, date };
+  return { title, pageUrl, poster, description, duration, creator, channel, tags, views, date, mediaUrls: directMediaUrls(item) };
 }
 
 function encodeId(item) {
@@ -188,11 +188,14 @@ function directMediaUrls(item) {
 
 async function streams(id) {
   const video = decodeId(id);
-  if (!video) return { streams: [] };
-  // The dataset item is intentionally not embedded in the ID, so no guessed
-  // page URL is ever returned as a playable stream. Direct stream support is
-  // enabled only when the actor provides a verified media URL in the item.
-  return { streams: [] };
+  if (!video || !Array.isArray(video.mediaUrls)) return { streams: [] };
+  return {
+    streams: video.mediaUrls.map((url, index) => ({
+      name: "Apify direct media",
+      title: video.title + (video.mediaUrls.length > 1 ? " · Quelle " + (index + 1) : ""),
+      url
+    }))
+  };
 }
 
-module.exports = { catalog, metadata, streams, normalize, decodeId, actorInput, directMediaUrls };
+module.exports = { catalog, metadata, streams, normalize, encodeId, decodeId, actorInput, directMediaUrls };
