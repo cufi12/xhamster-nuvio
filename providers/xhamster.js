@@ -193,7 +193,11 @@ function fetchMatchingPage(pageUrl, movieTitle) {
   }).then(function (html) {
     if (!html) return [];
     var label = pageTitle(html);
-    if (!titleMatches(movieTitle, label)) return [];
+    var expectedTitles = Array.isArray(movieTitle) ? movieTitle : [movieTitle];
+    var matchesTitle = expectedTitles.some(function (expected) {
+      return titleMatches(expected, label);
+    });
+    if (!matchesTitle) return [];
 
     return extractMedia(html, pageUrl).map(function (mediaUrl) {
       return {
@@ -231,7 +235,7 @@ function getStreams(tmdbId, mediaType) {
           var pages = unique([].concat.apply([], groups)).slice(0, 30);
           console.log("[CVN-xHamster] Search pages found: " + pages.length);
           return Promise.all(pages.map(function (pageUrl) {
-            return fetchMatchingPage(pageUrl, metadata.title);
+            return fetchMatchingPage(pageUrl, titles);
           }));
         })
         .then(function (groups) {
