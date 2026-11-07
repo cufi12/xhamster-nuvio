@@ -135,7 +135,9 @@ async function adultEmbedCatalog(catalogId, skip) {
     xh_german_studio: ["German Dub", "Deutsch synchronisiert"],
     xh_german_all: ["German Dub", "German dubbed", "Deutsch synchronisiert"],
     xh_hentai_german_dub: ["Hentai German Dub", "Hentai Deutsch synchronisiert"],
-    xh_mario_salieri_german_dub: ["Mario Salieri German Dub", "Mario Salieri Deutsch"]
+    xh_mario_salieri_german_dub: ["Mario Salieri German Dub", "Mario Salieri Deutsch"],
+    // Broad free-platform mix; keep only explicit dubbing markers below.
+    xh_free_german_platforms: ["German Dub", "German dubbed", "German audio", "Deutsch synchronisiert", "Deutsche Tonspur", "Deutsch vertont"]
   }[catalogId] || [];
   const batches = await Promise.all(queries.map(q => adultEmbedSearch(q, 1)));
   const seen = new Set();
@@ -232,7 +234,8 @@ async function epornerCatalog(catalogId, skip) {
     xh_german_studio: ["German"],
     xh_german_all: ["German Dub", "Deutsch", "German"],
     xh_hentai_german_dub: ["Hentai German Dub", "German Hentai", "Hentai Deutsch"],
-    xh_mario_salieri_german_dub: ["Mario Salieri German Dub", "Mario Salieri German"]
+    xh_mario_salieri_german_dub: ["Mario Salieri German Dub", "Mario Salieri German"],
+    xh_free_german_platforms: ["German Dub", "German dubbed", "German audio", "Deutsch synchronisiert", "Deutsche Tonspur", "Deutsch vertont"]
   }[catalogId] || [];
   const batches = await Promise.all(queries.map(q => epornerSearch(q, 1)));
   const seen = new Set();
@@ -306,7 +309,8 @@ const CATALOG_SEARCHES = {
   xh_german_studio: "German",
   xh_hentai_german_dub: "Hentai German Dub",
   xh_mario_salieri_german_dub: "Mario Salieri German Dub",
-  xh_german_all: "German Dub"
+  xh_german_all: "German Dub",
+  xh_free_german_platforms: "German Dub"
 };
 async function catalog(args) {
   const skip = Math.max(0, Number(args.extra?.skip || 0));
