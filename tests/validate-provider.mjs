@@ -76,7 +76,7 @@ try {
   const apiKeySetting = settingsSchema.find((setting) => setting.key === "tmdbApiKey");
   assert.ok(apiKeySetting, "TMDB API key setting must be exposed.");
   assert.equal(apiKeySetting.type, "text");
-  assert.equal(apiKeySetting.isPassword, true, "API key input must be masked.");
+  assert.equal(apiKeySetting.isPassword, true, "Provider schema must declare the field as password-style; UI masking depends on the Nuvio app.");
   assert.ok(apiKeySetting.label && apiKeySetting.description);
   assert.ok(!JSON.stringify(settingsSchema).includes("test-key-only"),
     "Settings schema must not expose a configured secret.");
