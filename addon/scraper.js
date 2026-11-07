@@ -106,15 +106,18 @@ function nextSearchPage(html, currentUrl) {
   return "";
 }
 async function searchVideoLinks(search) {
-  let url = BASE + "/search/" + encodeURIComponent(search);
-  const visited = new Set();
+  const queries = unique((Array.isArray(search) ? search : [search]).map(value => String(value || "").trim()).filter(Boolean));
   const links = [];
-  for (let page = 0; page < 5 && url && !visited.has(url); page++) {
-    visited.add(url);
-    const html = await getHtml(url);
-    if (!html) break;
-    links.push(...videoLinks(html));
-    url = nextSearchPage(html, url);
+  for (const term of queries) {
+    let url = BASE + "/search/" + encodeURIComponent(term);
+    const visited = new Set();
+    for (let page = 0; page < 3 && url && !visited.has(url); page++) {
+      visited.add(url);
+      const html = await getHtml(url);
+      if (!html) break;
+      links.push(...videoLinks(html));
+      url = nextSearchPage(html, url);
+    }
   }
   return unique(links);
 }
@@ -158,6 +161,7 @@ async function pageMeta(url) {
   return {
     id: makeId(url), type: "movie", name, poster: poster || undefined,
     description: [description, audioNote].filter(Boolean).join(" "),
+    audioLanguage: audioLanguage || undefined,
     posterShape: "landscape", background: poster || undefined, url
   };
 }
@@ -506,65 +510,53 @@ async function epornerStreams(id) {
 }
 
 const CATALOG_SEARCHES = {
-  // Search phrases are public-site queries; they do not guarantee language or studio metadata.
-  xh_german_studio: "German",
-  xh_hentai_german_dub: "Hentai German Dub",
-  xh_mario_salieri_german_dub: "Mario Salieri German Dub",
-  xh_german_all: "German Dub",
-  xh_free_german_platforms: "German Dub"
+  xh_german_studio: ["German", "Deutsch", "German Dub", "Deutsch synchronisiert"],
+  xh_hentai_german_dub: ["Hentai German Dub", "Hentai German dubbed", "Hentai Deutsch synchronisiert"],
+  xh_mario_salieri_german_dub: ["Mario Salieri German Dub", "Mario Salieri Deutsch synchronisiert"],
+  xh_german_all: ["German Dub", "German dubbed", "German audio", "Deutsch synchronisiert", "Deutsche Tonspur", "Deutsch vertont"],
+  // This is a wider xHamster search, not a multi-provider feed.
+  xh_free_german_platforms: ["German Dub", "German dubbed", "German audio", "Deutsch synchronisiert", "Deutsche Tonspur", "Deutsch vertont"]
 };
 async function catalog(args) {
   const skip = Math.max(0, Number(args.extra?.skip || 0));
-  const search = String(args.extra?.search || CATALOG_SEARCHES[args.id] || "").trim();
+  const search = String(args.extra?.search || "").trim();
+  const queries = search ? [search] : (CATALOG_SEARCHES[args.id] || []);
+  const isHentai = value => /hentai|anime|animated/i.test(String(value || ""));
+  const isSalieri = value => /mario salieri|salieri/i.test(String(value || ""));
+  const hasGermanAudioEvidence = meta => meta?.audioLanguage === "de" ||
+    isGermanDub([meta?.name, meta?.description].join(" "));
+  const hasGermanMarker = meta => meta?.audioLanguage === "de" ||
+    /\b(german|deutsch|germany|deutsche[nrms]?)\b/i.test([meta?.name, meta?.description].join(" "));
 
-  // Each upstream is isolated: a timeout, network error, or temporary API
-  // outage at one provider must not make the entire Nuvio catalog fail.
-  const safe = async (label, task) => {
+  const xhMetas = await (async () => {
     try {
-      return await task();
+      const links = await searchVideoLinks(queries);
+      const metas = await Promise.all(links.slice(0, 100).map(pageMeta));
+      return metas.filter(meta => {
+        if (!meta) return false;
+        const text = [meta.name, meta.description].join(" ");
+        if (args.id === "xh_german_studio") return hasGermanMarker(meta);
+        if (args.id === "xh_hentai_german_dub") return isHentai(text) && hasGermanAudioEvidence(meta);
+        if (args.id === "xh_mario_salieri_german_dub") return isSalieri(text) && hasGermanAudioEvidence(meta);
+        if (args.id === "xh_german_all" || args.id === "xh_free_german_platforms") return hasGermanAudioEvidence(meta);
+        return true;
+      });
     } catch (error) {
-      console.warn("[CVN catalog] " + label + " unavailable:", error?.message || error);
+      console.warn("[CVN catalog] xHamster unavailable:", error?.message || error);
       return [];
     }
-  };
+  })();
 
-  // AdultEmbed's documented API exposes an iframe player only, not a
-  // direct MP4/HLS source. Nuvio's native player cannot decode that HTML page,
-  // so omit those entries rather than presenting titles that cannot play.
-  // Eporner's current media host rejects ordinary playback requests (HTTP 403).
-  // Keep legacy ep: IDs resolvable, but stop advertising new Eporner entries
-  // until the provider exposes a publicly playable MP4/HLS source.
-  const [epMetas, xhMetas] = await Promise.all([
-    Promise.resolve([]),
-    safe("xHamster", async () => {
-      if (search) {
-        const links = await searchVideoLinks(search);
-        const metas = await Promise.all(links.slice(0, 80).map(pageMeta));
-        return metas.filter(meta => meta && isGermanDub([meta.name, meta.description].join(" ")));
-      }
-      const html = await getHtml(BASE + "/");
-      const links = videoLinks(html);
-      const metas = await Promise.all(links.slice(0, 80).map(pageMeta));
-      return metas.filter(Boolean);
-    })
-  ]);
-
-  // Merge before pagination so skip is applied once to the combined catalog.
   const seen = new Set();
   const merged = [];
-  for (const meta of [...xhMetas, ...epMetas]) {
-    if (!meta || !meta.id || seen.has(meta.id)) continue;
+  for (const meta of xhMetas) {
+    if (!meta?.id || seen.has(meta.id)) continue;
     seen.add(meta.id);
-    // Keep the exact catalog preview in memory so the subsequent detail
-    // request does not depend on a second, potentially throttled provider call.
     META_CACHE.set(String(meta.id), meta);
-    if (META_CACHE.size > 2000) {
-      const oldest = META_CACHE.keys().next().value;
-      META_CACHE.delete(oldest);
-    }
+    if (META_CACHE.size > 2000) META_CACHE.delete(META_CACHE.keys().next().value);
     merged.push(meta);
   }
-  return { metas: merged.slice(skip, skip + 40), cacheMaxAge: search ? 300 : 900 };
+  return { metas: merged.slice(skip, skip + 40), cacheMaxAge: queries.length ? 300 : 900 };
 }
 
 async function metadata(id) {
