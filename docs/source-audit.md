@@ -2,6 +2,12 @@
 
 Dieses Audit trennt **kostenlose legale Anbieter** von **direkt integrierbaren Nuvio-Streams**. Ein Anbieter kann legal sein, ohne eine öffentliche Direktstream-Schnittstelle zu erlauben.
 
+## Nachprüfung vorhandener Nuvio-Provider (7. November 2026)
+
+Ein öffentliches Community-Repository `InvalidPandaa/nuvio-german-providers` enthält GPL-3.0-or-later-Code für ARD, ARTE und Netzkino. Das bestätigt, dass es bereits technische Implementierungsansätze gibt, aber **nicht**, dass diese in diesem Repository unverändert funktionieren, dass jeder Treffer zum gewünschten Titel passt oder dass ein Nuvio-Wiedergabetest bestanden wurde. Die dortige Sammlung enthält daneben Drittanbieter-/Hoster-Provider, die ausdrücklich nicht übernommen werden. Vor einer Übernahme sind Lizenzhinweise und vollständiger Quelltext zu erhalten, die Schnittstellen an die aktuelle Nuvio-Version anzupassen und echte Tests durchzuführen.
+
+**Entscheidung:** ARD, ARTE und Netzkino bleiben legale Recherche-Kandidaten für die erste Kategorie bzw. für einzelne Titel mit bestätigter deutscher Tonspur. Sie werden noch nicht als funktionierende Provider aktiviert. Für ARTE/ARD sind Titelrechte und Länderfenster titelbezogen zu prüfen; bei Netzkino müssen die konkrete Veröffentlichung und Stream-URL geprüft werden. Ein bloßer API-Treffer reicht nicht.
+
 ## Ergebnis je Kategorie
 
 ### 1. Deutsche Studios
