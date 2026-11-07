@@ -36,6 +36,14 @@ const ids = new Set();
     const result = await provider.getStreams("550", "movie", null, null);
     assert.ok(Array.isArray(result), spec.id + " must return an array");
     assert.equal(result.length, 0, spec.id + " must not return unverified streams");
+
+    const invalid = await provider.getStreams(null, "unknown", null, null);
+    assert.deepEqual(invalid, [], spec.id + " must safely reject invalid input");
+
+    if (spec.id === "cvn-hentai-german-dub") {
+      const series = await provider.getStreams("123", "tv", 1, 1);
+      assert.deepEqual(series, [], "Hentai provider must accept the Nuvio tv media type");
+    }
   }
 
   assert.equal(ids.size, expected.length);
