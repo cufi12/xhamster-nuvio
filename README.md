@@ -1,16 +1,16 @@
-# CVN-xHamster Deutsch für Nuvio
+# CVN Multi-Provider für Nuvio
 
-Community-Projekt mit zwei getrennten Komponenten: einem lokalen Nuvio-Stream-Provider und einem eigenständigen Stremio-kompatiblen Katalog-Addon.
+Community-Projekt mit einer gemeinsamen Nuvio-Plugin-Repository und **einem getrennten Provider-Modul pro unterstützter Plattform**. Katalog-Addon und lokale Stream-Provider bleiben technisch getrennt.
 
-## xHamster-Katalog-Addon
+## Architektur
 
-Der Katalog ist neu und getrennt vom lokalen Plugin. Er bietet einen Feed, eine Suchfunktion, Videodetails und – sofern eine direkt eingebettete öffentliche HLS-Adresse vorhanden ist – Streams.
+- Das Repository-Manifest `manifest.json` listet alle Provider im Array `scrapers`.
+- Jeder Provider besitzt eine eindeutige `id`, einen eigenen Namen und eine eigene JavaScript-Datei unter `providers/`.
+- Nuvio lädt die im Manifest aufgeführten Provider und verwaltet sie unabhängig. Ein xHamster-Provider verarbeitet deshalb keine URLs oder Streams anderer Plattformen.
+- Neue Plattformen werden als eigenes Modul ergänzt und als zusätzlicher Eintrag im Manifest registriert. Es ist weder nötig noch erwünscht, fremde Plattformlogik in `xhamster.js` einzubauen.
+- Gemeinsame Helfer dürfen später in `providers/lib/` liegen; plattformspezifische Suche, Seitenprüfung und Stream-Auflösung bleiben im jeweiligen Provider.
 
-**Das Addon ist noch nicht öffentlich bereitgestellt.** Es muss zuerst auf einem Node.js-Host laufen. Ein Render-Blueprint liegt in `render.yaml`. Beim Deployment den Branch `add-xhamster-provider` auswählen. Render soll das Verzeichnis `addon` als Root verwenden und `npm start` ausführen.
-
-Nach erfolgreichem Deployment die vom Host ausgegebene URL mit `/manifest.json` in Nuvio unter **Addons** hinzufügen. Beispiel: `https://DEINE-DOMAIN/manifest.json`. Die GitHub-Raw-Manifest-URL des Nuvio-Plugins ist hierfür nicht geeignet.
-
-Details und lokale Startanleitung: [addon/README.md](addon/README.md).
+**Aktiv integriert ist derzeit nur xHamster.** Die Multi-Provider-Struktur ist vorbereitet; andere Plattformen werden nicht als verfügbar angezeigt, bevor ein eigener, geprüfter Provider implementiert wurde.
 
 ## Bestehender Nuvio-Stream-Provider
 
@@ -21,51 +21,44 @@ Manifest-URL:
 In Nuvio als **Plugin-Repository** hinzufügen – nicht im Bereich „Addons“:
 
 1. In Nuvio **Einstellungen → Inhalt & Entdeckung → Plugins** öffnen.
-2. **Repository hinzufügen** wählen und die Manifest-URL oben einfügen.
-3. Repository aktualisieren und den Provider **CVN-xHamster Deutsch** in der Providerliste aktivieren.
-4. Im Provider-Einstellungsfeld **TMDB Read Access Token (v4)** den eigenen Token eintragen. Alternativ kann der v3 API-Key verwendet werden. Der v4-Token hat Vorrang.
+2. **Repository hinzufügen** wählen und die Manifest-URL einfügen.
+3. Repository aktualisieren und **CVN-xHamster Deutsch** aktivieren.
+4. Für die TMDB-Titelsuche den eigenen TMDB Read Access Token (v4) oder alternativ den v3 API-Key in den Provider-Einstellungen eintragen.
 
-Die Menübezeichnungen können je nach App-Version leicht abweichen. Nicht jede Nuvio-Version unterstützt Plugins; bei fehlendem Plugin-Menü zuerst prüfen, ob die installierte App-Version Plugins unterstützt.
+Die Menübezeichnungen können je nach App-Version abweichen. Nicht jede Nuvio-Version unterstützt Plugins.
 
-## Aktueller Stand des Providers
+## xHamster-Provider – aktueller Stand
 
-Aktuelle Provider-Version: **2.0.0**  
-Aktuelle Katalog-Server-Version: **0.2.0**
-
+- Provider-Version: **2.1.0**
 - Unterstützt die Nuvio-Plugin-Schnittstelle `getStreams(tmdbId, mediaType)`.
-- Unterstützt ausschließlich Filme. `other` wird von NuvioMobile intern als `tv` normalisiert und deshalb bewusst nicht als unterstützter Typ deklariert.
-- Bevorzugt HLS-Streams (`.m3u8`) und nutzt direkt veröffentlichte MP4-Streams als Fallback.
-- Liest öffentliche xHamster-Player-Metadaten aus `initials-script` und übergibt die erforderlichen Referer-Header an Nuvios Player.
-- Unterstützt den TMDB Read Access Token (v4) per Bearer-Authentifizierung; alternativ bleibt der API Key (v3) verfügbar. Zugangsdaten werden ausschließlich lokal in den Nuvio-Provider-Einstellungen gespeichert und nicht ins Repository geschrieben.
-- Verwendet TMDB-Metadaten zur Titelauflösung und berücksichtigt einen bekannten Alternativtitel.
-- Normalisiert Umlaute, Unicode-Zeichen und Leerzeichen bei Titelvergleichen und verlangt bei längeren Titeln eine Mindestübereinstimmung.
+- Unterstützt derzeit ausschließlich Filme.
+- Bevorzugt öffentlich bereitgestellte HLS-Streams und nutzt MP4 als Fallback.
+- Liest öffentliche xHamster-Player-Metadaten; umgeht keine Anmeldung, Altersprüfung, CAPTCHA-, DRM- oder Anti-Bot-Schutzmechanismen.
+- Verwendet TMDB-Metadaten zur Titelauflösung.
 - Gibt keine Treffer zurück, wenn Metadaten oder passende Stream-Informationen nicht verfügbar sind.
 
-## Deutsche Sprache: noch nicht verifiziert
+## Deutsche Sprache: nicht verifiziert
 
-Der Provider kann derzeit **nicht feststellen**, ob ein Treffer deutsche Originalsprache, deutsche Synchronisation oder überhaupt eine deutschsprachige Tonspur enthält. Auch der deutsche Such-Host und ein passender Filmtitel sind dafür kein Beleg. Deshalb wird im Manifest keine bestätigte Inhaltssprache deklariert. Der Name „Deutsch“ beschreibt aktuell das Projektziel, nicht eine garantierte Eigenschaft jedes gefundenen Streams.
+Der Provider kann derzeit nicht zuverlässig feststellen, ob ein Treffer deutsche Originalsprache oder deutsche Synchronisation enthält. Der deutsche Such-Host und ein passender Filmtitel sind kein Beleg für eine deutsche Tonspur. Deshalb wird keine bestätigte Inhaltssprache deklariert.
 
-Ein echter Deutschfilter benötigt verlässliche, öffentlich zugängliche Sprach-/Audio-Metadaten und eine erlaubte Integrationsmethode. Solange diese fehlen, werden Treffer nicht als deutsch verifiziert ausgegeben.
+## xHamster-Katalog-Addon
 
-## Wichtige Einschränkungen
+Das Katalog-Addon ist eine eigenständige Stremio-kompatible Komponente unter `addon/`. Es ist nicht das Plugin-Repository und wird in Nuvio unter **Addons** hinzugefügt. Die Addon-URL ist:
 
-Beide Komponenten sind experimentelle Community-Integrationen und keine offizielle xHamster-Integration. Es gibt derzeit keine bestätigte offizielle API-/RSS-Freigabe oder Partnerschaft.
+`https://cvn-xhamster-catalog.onrender.com/manifest.json`
 
-Der Katalog und Provider verwenden nur öffentlich erreichbare Seiten und direkt eingebettete Medienadressen. Sie umgehen keine Anmeldung, Altersprüfung, CAPTCHA-, DRM- oder Anti-Bot-Schutzmechanismen. Verfügbarkeit und Wiedergabe hängen von xHamster, Nuvio und den jeweils geltenden Zugriffsbedingungen ab.
+## Entwicklung und Tests
 
-## Automatische Prüfungen
-
-GitHub Actions prüft die JavaScript-Syntax des Providers und Katalog-Addons, den Provider-Vertrag sowie simulierte Katalogsuche, Metadaten, ID-Validierung und HLS-Extraktion. Diese Tests ersetzen keinen echten Wiedergabetest innerhalb der Nuvio-App.
-
-## Entwicklung
-
-- Lokaler Nuvio-Provider: `providers/xhamster.js`
+- Plugin-Manifest: `manifest.json`
+- Provider: `providers/xhamster.js`
+- Provider-Konvention und Checkliste: `providers/README.md`
 - Katalog-Addon: `addon/`
+- Vertrags- und Mock-Tests: `tests/validate-provider.mjs`
 
-Änderungen erfolgen auf dem Branch `add-xhamster-provider`. Die Standard- bzw. Hauptbranch wird dadurch nicht verändert.
+Änderungen erfolgen auf dem Branch `add-xhamster-provider`. Ein erfolgreicher Syntax-/Mock-Test ersetzt keinen echten Wiedergabetest in Nuvio.
 
-## Sicherheitshinweis
+## Sicherheit und Rechte
 
-Ein früher im Quellcode enthaltener TMDB-Schlüssel gilt als offengelegt. Bitte diesen Schlüssel im TMDB-Konto widerrufen bzw. ersetzen. Version 2.0.0 enthält keinen fest eingebauten TMDB-Schlüssel; der neue Schlüssel wird über die Nuvio-Provider-Einstellung `tmdbApiKey` eingegeben.
+Dies ist keine offizielle xHamster-Integration. Es gibt keine bestätigte offizielle API-Freigabe oder Partnerschaft. Inhalte werden nicht gespiegelt oder auf unserem Server zwischengespeichert. Nur öffentlich zugängliche Seiten und direkt bereitgestellte Medienadressen werden berücksichtigt, soweit die jeweiligen Zugriffsbedingungen dies erlauben. Keine Umgehung von Zugriffsschutz und keine Weiterverbreitung fremder Inhalte.
 
-**Hinweis zur Sichtbarkeit:** Das Provider-Schema markiert das Feld als Passwortfeld (`isPassword: true`). Im aktuell geprüften NuvioMobile-Code wird dieses Merkmal zwar ausgelesen, aber nicht an das Eingabefeld weitergegeben. Der Schlüssel kann deshalb beim Bearbeiten sichtbar sein. Der Eintrag wird von Nuvio lokal als Provider-Einstellung gespeichert; behandle ihn in der App daher weiterhin vertraulich.
+**TMDB-Schlüssel:** Ein früher im Quellcode enthaltener Schlüssel gilt als offengelegt und sollte im TMDB-Konto widerrufen/ersetzt werden. Aktuelle Versionen enthalten keinen fest eingebauten Schlüssel; Zugangsdaten werden lokal in Nuvio als Provider-Einstellungen hinterlegt.
