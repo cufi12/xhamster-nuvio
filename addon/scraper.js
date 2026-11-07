@@ -310,22 +310,46 @@ const CATALOG_SEARCHES = {
 };
 async function catalog(args) {
   const skip = Math.max(0, Number(args.extra?.skip || 0));
-  const [epMetas, aeMetas] = await Promise.all([
-    epornerCatalog(args.id, skip), adultEmbedCatalog(args.id, skip)
-  ]);
   const search = String(args.extra?.search || CATALOG_SEARCHES[args.id] || "").trim();
-  if (!search) {
-    // The front page is a public, ordinary listing; no access controls are bypassed.
-    const html = await getHtml(BASE + "/");
-    const links = videoLinks(html);
-    const metas = await Promise.all(links.slice(skip, skip + 40).map(pageMeta));
-    return { metas: [...metas.filter(Boolean), ...epMetas, ...aeMetas], cacheMaxAge: 900 };
+
+  // Each upstream is isolated: a timeout, network error, or temporary API
+  // outage at one provider must not make the entire Nuvio catalog fail.
+  const safe = async (label, task) => {
+    try {
+      return await task();
+    } catch (error) {
+      console.warn("[CVN catalog] " + label + " unavailable:", error?.message || error);
+      return [];
+    }
+  };
+
+  const [epMetas, aeMetas, xhMetas] = await Promise.all([
+    safe("Eporner", () => epornerCatalog(args.id, 0)),
+    safe("AdultEmbed", () => adultEmbedCatalog(args.id, 0)),
+    safe("xHamster", async () => {
+      if (search) {
+        const links = await searchVideoLinks(search);
+        const metas = await Promise.all(links.slice(0, 80).map(pageMeta));
+        return metas.filter(meta => meta && isGermanDub([meta.name, meta.description].join(" ")));
+      }
+      const html = await getHtml(BASE + "/");
+      const links = videoLinks(html);
+      const metas = await Promise.all(links.slice(0, 80).map(pageMeta));
+      return metas.filter(Boolean);
+    })
+  ]);
+
+  // Merge before pagination so skip is applied once to the combined catalog.
+  const seen = new Set();
+  const merged = [];
+  for (const meta of [...xhMetas, ...epMetas, ...aeMetas]) {
+    if (!meta || !meta.id || seen.has(meta.id)) continue;
+    seen.add(meta.id);
+    merged.push(meta);
   }
-  const links = await searchVideoLinks(search);
-  const metas = await Promise.all(links.slice(skip, skip + 40).map(pageMeta));
-  const germanMetas = metas.filter(meta => meta && isGermanDub([meta.name, meta.description].join(" ")));
-  return { metas: [...germanMetas, ...epMetas, ...aeMetas], cacheMaxAge: 300 };
+  return { metas: merged.slice(skip, skip + 40), cacheMaxAge: search ? 300 : 900 };
 }
+
 async function metadata(id) {
   if (String(id || "").startsWith("ae:")) {
     const meta = await adultEmbedMetadata(id);
