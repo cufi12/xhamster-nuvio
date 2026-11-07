@@ -23,19 +23,19 @@ In Nuvio als **Plugin-Repository** hinzufügen – nicht im Bereich „Addons“
 1. In Nuvio **Einstellungen → Inhalt & Entdeckung → Plugins** öffnen.
 2. **Repository hinzufügen** wählen und die Manifest-URL oben einfügen.
 3. Repository aktualisieren und den Provider **CVN-xHamster Deutsch** in der Providerliste aktivieren.
-4. Falls der Provider Einstellungen anbietet, den eigenen TMDB-API-Schlüssel dort eintragen.
+4. Im Provider-Einstellungsfeld **TMDB Read Access Token (v4)** den eigenen Token eintragen. Alternativ kann der v3 API-Key verwendet werden. Der v4-Token hat Vorrang.
 
 Die Menübezeichnungen können je nach App-Version leicht abweichen. Nicht jede Nuvio-Version unterstützt Plugins; bei fehlendem Plugin-Menü zuerst prüfen, ob die installierte App-Version Plugins unterstützt.
 
 ## Aktueller Stand des Providers
 
-Aktuelle Version: **1.9.9**
+Aktuelle Version: **2.0.0**
 
 - Unterstützt die Nuvio-Plugin-Schnittstelle `getStreams(tmdbId, mediaType)`.
 - Unterstützt ausschließlich Filme. `other` wird von NuvioMobile intern als `tv` normalisiert und deshalb bewusst nicht als unterstützter Typ deklariert.
 - Bevorzugt HLS-Streams (`.m3u8`) und nutzt direkt veröffentlichte MP4-Streams als Fallback.
 - Liest öffentliche xHamster-Player-Metadaten aus `initials-script` und übergibt die erforderlichen Referer-Header an Nuvios Player.
-- Fragt den persönlichen TMDB-API-Schlüssel über die Nuvio-Provider-Einstellungen ab; es ist kein API-Schlüssel im Quellcode hinterlegt.
+- Unterstützt den TMDB Read Access Token (v4) per Bearer-Authentifizierung; alternativ bleibt der API Key (v3) verfügbar. Zugangsdaten werden ausschließlich lokal in den Nuvio-Provider-Einstellungen gespeichert und nicht ins Repository geschrieben.
 - Verwendet TMDB-Metadaten zur Titelauflösung und berücksichtigt einen bekannten Alternativtitel.
 - Normalisiert Umlaute, Unicode-Zeichen und Leerzeichen bei Titelvergleichen und verlangt bei längeren Titeln eine Mindestübereinstimmung.
 - Gibt keine Treffer zurück, wenn Metadaten oder passende Stream-Informationen nicht verfügbar sind.
@@ -65,6 +65,6 @@ GitHub Actions prüft die JavaScript-Syntax des Providers und Katalog-Addons, de
 
 ## Sicherheitshinweis
 
-Ein früher im Quellcode enthaltener TMDB-Schlüssel gilt als offengelegt. Bitte diesen Schlüssel im TMDB-Konto widerrufen bzw. ersetzen. Version 1.9.9 enthält keinen fest eingebauten TMDB-Schlüssel; der neue Schlüssel wird über die Nuvio-Provider-Einstellung `tmdbApiKey` eingegeben.
+Ein früher im Quellcode enthaltener TMDB-Schlüssel gilt als offengelegt. Bitte diesen Schlüssel im TMDB-Konto widerrufen bzw. ersetzen. Version 2.0.0 enthält keinen fest eingebauten TMDB-Schlüssel; der neue Schlüssel wird über die Nuvio-Provider-Einstellung `tmdbApiKey` eingegeben.
 
 **Hinweis zur Sichtbarkeit:** Das Provider-Schema markiert das Feld als Passwortfeld (`isPassword: true`). Im aktuell geprüften NuvioMobile-Code wird dieses Merkmal zwar ausgelesen, aber nicht an das Eingabefeld weitergegeben. Der Schlüssel kann deshalb beim Bearbeiten sichtbar sein. Der Eintrag wird von Nuvio lokal als Provider-Einstellung gespeichert; behandle ihn in der App daher weiterhin vertraulich.
