@@ -25,8 +25,40 @@ function videoLinks(html) {
     const url = absolute(m[1]).split(/[?#]/)[0];
     if (VIDEO_RE.test(url)) links.push(url);
   }
-  return unique(links).slice(0, 30);
+  return unique(links);
 }
+
+function nextSearchPage(html, currentUrl) {
+  const anchors = /<a\\b([^>]*?)href=[\\"']([^\\"']+)[\\"']([^>]*)>([\\s\\S]*?)<\\/a>/gi;
+  let match;
+  while ((match = anchors.exec(html)) !== null) {
+    const attrs = match[1] + " " + match[3];
+    const label = textFromHtml(match[4]).toLowerCase();
+    if (!/rel=[\\"']next[\\"']|aria-label=[\\"'][^\\"']*next|class=[\\"'][^\\"']*(?:next|pagination)/i.test(attrs) &&
+        !/^(?:next|›|»|→)$/.test(label)) continue;
+    try {
+      const candidate = new URL(absolute(match[2]) || match[2], currentUrl);
+      const current = new URL(currentUrl);
+      if (candidate.protocol === "https:" && candidate.hostname.endsWith("xhamster.com") &&
+          candidate.pathname.startsWith("/search/") && candidate.href !== current.href) return candidate.href;
+    } catch (_) {}
+  }
+  return "";
+}
+async function searchVideoLinks(search) {
+  let url = BASE + "/search/" + encodeURIComponent(search);
+  const visited = new Set();
+  const links = [];
+  for (let page = 0; page < 5 && url && !visited.has(url); page++) {
+    visited.add(url);
+    const html = await getHtml(url);
+    if (!html) break;
+    links.push(...videoLinks(html));
+    url = nextSearchPage(html, url);
+  }
+  return unique(links);
+}
+
 function metaTag(html, key) {
   const escaped = key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const patterns = [
@@ -67,7 +99,7 @@ async function pageMeta(url) {
 }
 const CATALOG_SEARCHES = {
   // Search phrases are public-site queries; they do not guarantee language or studio metadata.
-  xh_german_studio: "German studio",
+  xh_german_studio: "German",
   xh_hentai_german_dub: "Hentai German Dub",
   xh_mario_salieri_german_dub: "Mario Salieri German Dub",
   xh_german_all: "German"
@@ -79,11 +111,10 @@ async function catalog(args) {
     // The front page is a public, ordinary listing; no access controls are bypassed.
     const html = await getHtml(BASE + "/");
     const links = videoLinks(html);
-    const metas = await Promise.all(links.slice(skip, skip + 20).map(pageMeta));
+    const metas = await Promise.all(links.slice(skip, skip + 40).map(pageMeta));
     return { metas: metas.filter(Boolean), cacheMaxAge: 900 };
   }
-  const html = await getHtml(BASE + "/search/" + encodeURIComponent(search));
-  const links = videoLinks(html);
+  const links = await searchVideoLinks(search);
   const metas = await Promise.all(links.slice(skip, skip + 20).map(pageMeta));
   return { metas: metas.filter(Boolean), cacheMaxAge: 300 };
 }
