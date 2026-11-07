@@ -17,6 +17,6 @@ jobs:
       - name: Check provider JavaScript syntax
         run: node --check providers/xhamster.js
       - name: Check catalog addon syntax
-        run: cd addon && npm install --ignore-scripts && npm run check
+        run: cd addon && npm install --ignore-scripts && npm run check && npm test
       - name: Validate manifest and provider contract
         run: node tests/validate-provider.mjs
