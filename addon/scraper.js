@@ -69,8 +69,8 @@ const CATALOG_SEARCHES = {
   // Search terms are public-site queries, not guarantees about a video's language or studio status.
   xh_german_studio: "German studio",
   xh_german_dub: "German Dub",
-  xh_german_new: "German",
-  xh_german_popular: "German"
+  xh_german_new: "German new",
+  xh_german_popular: "German popular"
 };
 async function catalog(args) {
   const search = String(args.extra?.search || CATALOG_SEARCHES[args.id] || "").trim();
