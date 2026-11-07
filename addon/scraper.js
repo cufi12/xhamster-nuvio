@@ -676,7 +676,7 @@ async function streams(id) {
   // For HLS master playlists, language is confirmed only from an AUDIO rendition's
   // LANGUAGE attribute (not from subtitles or the surrounding page text).
   const hlsGermanAudio = new Set();
-  for (const candidate of urls.filter(value => /\\.m3u8(?:$|[?#])/i.test(value)).slice(0, 5)) {
+  for (const candidate of urls.filter(value => value.toLowerCase().includes(".m3u8")).slice(0, 5)) {
     if (await hlsAudioLanguage(candidate) === "de") hlsGermanAudio.add(candidate);
   }
   if (!urls.length) {
