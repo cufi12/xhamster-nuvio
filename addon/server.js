@@ -20,11 +20,22 @@ const manifest = {
 
 const builder = new addonBuilder(manifest);
 builder.defineCatalogHandler(args => {
-  if (args.type !== "movie" || !manifest.catalogs.some(catalog => catalog.id === args.id)) return Promise.resolve({ metas: [] });
-  return scraper.catalog(args);
+  if (args.type !== "movie" || !manifest.catalogs.some(catalog => catalog.id === args.id)) {
+    return Promise.resolve({ metas: [] });
+  }
+  return scraper.catalog(args).catch(error => {
+    console.error("[CVN catalog] request failed:", error?.stack || error);
+    return { metas: [], cacheMaxAge: 60 };
+  });
 });
-builder.defineMetaHandler(args => scraper.metadata(args.id));
-builder.defineStreamHandler(args => scraper.streams(args.id));
+builder.defineMetaHandler(args => scraper.metadata(args.id).catch(error => {
+  console.error("[CVN metadata] request failed:", error?.stack || error);
+  return { meta: { id: String(args.id || ""), type: "movie", name: "Video vorübergehend nicht verfügbar" } };
+}));
+builder.defineStreamHandler(args => scraper.streams(args.id).catch(error => {
+  console.error("[CVN streams] request failed:", error?.stack || error);
+  return { streams: [] };
+}));
 
 const port = Number(process.env.PORT || 7000);
 serveHTTP(builder.getInterface(), { port });
