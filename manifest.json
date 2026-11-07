@@ -1,6 +1,6 @@
 {
   "name": "CVN-xHamster Deutsch",
-  "version": "1.9.8",
+  "version": "1.9.9",
   "scrapers": [
     {
       "id": "xhamster",
@@ -15,7 +15,8 @@
       "enabled": true,
       "formats": [
         "hls",
-        "m3u8"
+        "m3u8",
+        "mp4"
       ],
       "limited": false,
       "disabledPlatforms": [],
