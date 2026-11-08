@@ -1,19 +1,7 @@
 {
   "name": "CVN Gratis-Katalog",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "scrapers": [
-    {
-      "id": "cvn-xhamster",
-      "name": "xHamster",
-      "description": "xHamster-Suche für Filme über TMDB-Titelauflösung und den verbundenen Apify-Backend-Dienst.",
-      "version": "1.0.0",
-      "author": "CVN",
-      "supportedTypes": ["movie"],
-      "filename": "providers/xhamster.js",
-      "enabled": true,
-      "hasSettings": true,
-      "contentLanguage": ["und"]
-    },
     {
       "id": "cvn-open-culture-archive",
       "name": "CVN · Open Culture Archive",
