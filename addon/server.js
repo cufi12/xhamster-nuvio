@@ -92,9 +92,18 @@ function createServer() {
     try {
       const args = { type: route.type, id: route.id, extra: route.extra || {} };
       if (route.resource === "catalog") {
-        const handler = route.id.startsWith("ixxx_") ? ixxx.catalog : xhamster.catalog;
-        const result = await handler(args);
-        return sendJson(res, 200, result || { metas: [] }, result?.cacheMaxAge ?? 60);
+        const isIxxx = route.id.startsWith("ixxx_");
+        const handler = isIxxx ? ixxx.catalog : xhamster.catalog;
+        try {
+          const result = await handler(args);
+          return sendJson(res, 200, result || { metas: [] }, result?.cacheMaxAge ?? 60);
+        } catch (error) {
+          if (!isIxxx) throw error;
+          // Some upstream regions block automated requests (HTTP 403).
+          // Keep Discover healthy and let the catalog retry after a short cache window.
+          console.warn("[CVN catalog] iXXX temporarily unavailable:", error?.message || error);
+          return sendJson(res, 200, { metas: [], cacheMaxAge: 60 }, 60);
+        }
       }
       if (route.resource === "meta") {
         const handler = route.id.startsWith("ixx:") ? ixxx.metadata : xhamster.metadata;
