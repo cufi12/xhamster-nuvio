@@ -11,8 +11,5 @@
   },
   "engines": {
     "node": ">=20"
-  },
-  "dependencies": {
-    "stremio-addon-sdk": "^1.6.10"
   }
 }
