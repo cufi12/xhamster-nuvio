@@ -300,7 +300,7 @@ async function streams(id) {
   // Keep verified MP4/direct files as fallback, rather than treating an unverified
   // playlist as playable.
   candidates.sort((a, b) => {
-    const isHls = value => /\\.m3u8(?:$|[?#])/i.test(value);
+    const isHls = value => /\.m3u8(?:$|[?#])/i.test(value);
     return Number(isHls(b)) - Number(isHls(a));
   });
   const verified = [];
@@ -311,7 +311,7 @@ async function streams(id) {
   // Never expose trailer/preview URLs as playback streams.
   return {
     streams: verified.map((url, index) => {
-      const hls = /\\.m3u8(?:$|[?#])/i.test(url);
+      const hls = /\.m3u8(?:$|[?#])/i.test(url);
       return {
         name: hls ? "HLS (adaptiv)" : "MP4 / Direktstream (Fallback)",
         title: video.title + (verified.length > 1 ? " · " + (hls ? "HLS" : "Fallback " + index) : ""),
