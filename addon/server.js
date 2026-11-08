@@ -3,7 +3,7 @@ const xhamster = require("./scraper");
 const ixxx = require("./ixxx");
 
 const manifest = {
-  id: "community.nuvio.cvn-catalog",
+  id: "community.nuvio.xhamster-links",
   version: "1.7.0",
   name: "CVN · Externe Kataloge",
   description: "iXXX-Verzeichniskataloge und xHamster-Suche mit externen Links. Keine direkten Medienstreams.",
