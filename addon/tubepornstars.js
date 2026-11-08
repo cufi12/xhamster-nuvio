@@ -27,7 +27,7 @@ function parseCards(html) {
     const publicId = (card.match(/data-public-id="([^"]+)"/i) || [])[1] || "";
     const title = decodeHtml((card.match(/class="item-title[^"]*"[^>]*title="([^"]+)"/i) || [])[1] || "");
     const img = decodeHtml((card.match(/<img[^>]+src="([^"]+)"/i) || [])[1] || "");
-    const durationMatch = card.match(/(?:^|\s)(\d{1,3}:\d{2}:\d{2})(?:\s|<)/);
+    const durationMatch = card.match(/(?:>|\s)(\d{1,3}:\d{2}:\d{2})(?:\s|<)/);
     const seconds = durationSeconds(durationMatch?.[1] || "");
     if (!publicId || !title || seconds < MIN_SECONDS) continue;
     if (!/\bgerman\s*dub(?:bed)?\b|\bgerman\s*dub\b/i.test(title)) continue;
