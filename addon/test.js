@@ -62,7 +62,28 @@ const scraper = require("./scraper");
     if (savedToken !== undefined) process.env.APIFY_TOKEN = savedToken;
   }
 
-  console.log("xHamster Apify addon contract tests passed.");
+
+  const tps = require("./tubepornstars");
+  assert.equal(tps.MIN_SECONDS, 5400);
+  assert.equal(tps.durationSeconds("1:30:00"), 5400);
+  assert.equal(tps.durationSeconds("1:29:59"), 5399);
+  const tpsCards = tps.parseCards(`
+    <div class="card sub group" data-public-id="movie90">
+      <a class="item-title item-link" title="German Dub Feature (1995)"></a>
+      <span class="badge">1:30:00</span>
+      <img src="https://cdn.example/poster.jpg">
+    </div>
+    <div class="card sub group" data-public-id="short">
+      <a class="item-title item-link" title="German Dub Short"></a>
+      <span class="badge">1:29:59</span>
+    </div>
+    <div class="card sub group" data-public-id="clip">
+      <a class="item-title item-link" title="German Dub Trailer"></a>
+      <span class="badge">2:00:00</span>
+    </div>`);
+  assert.equal(tpsCards.length, 1);
+  assert.equal(tpsCards[0].publicId, "movie90");
+\n  console.log("xHamster and TubePornstars catalog contract tests passed.");
 })().catch(error => {
   console.error(error);
   process.exitCode = 1;
