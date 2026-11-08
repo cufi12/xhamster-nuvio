@@ -18,12 +18,14 @@ const scraper = require("./scraper");
     thumbnail: "https://cdn.example/image.jpg",
     tags: ["tag-a", "tag-b"],
     duration: 120,
-    directUrl: "https://cdn.example/video.mp4"
+    directUrl: "https://cdn.example/video.mp4",
+    trailerUrl: "https://cdn.example/preview.mp4"
   };
   const normalized = scraper.normalize(item);
   assert.equal(normalized.title, "Example");
   assert.equal(normalized.pageUrl, "https://xhamster.com/videos/example");
   assert.deepEqual(normalized.tags, ["tag-a", "tag-b"]);
+  assert.deepEqual(normalized.previewCandidates, ["https://cdn.example/preview.mp4"]);
 
   const stableId = scraper.encodeId(item);
   assert.equal(stableId, scraper.encodeId({ ...item, title: "Changed title", description: "new metadata" }));
@@ -33,6 +35,7 @@ const scraper = require("./scraper");
 
   assert.deepEqual(scraper.directMediaCandidates({ directUrl: "https://cdn.example/video.mp4" }), ["https://cdn.example/video.mp4"]);
   assert.deepEqual(scraper.directMediaCandidates({ directUrl: "javascript:alert(1)" }), []);
+  assert.deepEqual(scraper.normalize({ previewUrl: "javascript:alert(1)" }).previewCandidates, []);
 
   const input = scraper.actorInput({ search: "cats", sort: "newest", tag: "fun" });
   assert.equal(input.searchQuery, "cats");
