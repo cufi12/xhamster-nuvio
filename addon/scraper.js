@@ -162,7 +162,7 @@ function matchesGermanDub(item) {
     .filter(value => typeof value === "string")
     .join(" ")
     .toLowerCase();
-  return /\\b(german\\s*dub(?:bed)?|dubbed\\s*in\\s*german|deutsch\\s*synchronisiert|deutsche\\s*synchronisation|deutsche\\s*synchro|german\\s*audio|deutsch\\s*vertont)\\b/i.test(description);
+  return /\b(german\s*dub(?:bed)?|dubbed\s*in\s*german|deutsch\s*synchronisiert|deutsche\s*synchronisation|deutsche\s*synchro|german\s*audio|deutsch\s*vertont)\b/i.test(description);
 }
 
 function matchesAnime(item) {
