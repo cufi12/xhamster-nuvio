@@ -146,7 +146,12 @@ function catalogIds() {
 async function catalog(args = {}) {
   if (args.type !== "movie" || !catalogIds().has(String(args.id || ""))) return { metas: [], cacheMaxAge: 300 };
   const input = actorInput(args);
-  if (args.id === "xh_latest") input.sort = "newest";
+  if (args.id === "xh_latest") {
+    // The actor has no global homepage mode: an empty input returns no items.
+    // Use its documented prefilled category as the default home catalog.
+    input.category = "amateur";
+    input.sort = "newest";
+  }
   const idToField = { xh_category: "category", xh_tag: "tag", xh_creator: "pornstar", xh_channel: "channel" };
   const field = idToField[args.id];
   if (field && !input[field]) return { metas: [], cacheMaxAge: 120 };
