@@ -15,7 +15,10 @@ const manifest = {
     { type: "movie", id: "xh_category", name: "xHamster · Kategorie", extra: [{ name: "category", isRequired: false }, { name: "sort", isRequired: false, options: ["relevance", "newest", "best"] }], showInHome: false, pageSize: 40 },
     { type: "movie", id: "xh_tag", name: "xHamster · Tag", extra: [{ name: "tag", isRequired: false }, { name: "sort", isRequired: false, options: ["relevance", "newest", "best"] }], showInHome: false, pageSize: 40 },
     { type: "movie", id: "xh_creator", name: "xHamster · Creator", extra: [{ name: "pornstar", isRequired: false }, { name: "sort", isRequired: false, options: ["relevance", "newest", "best"] }], showInHome: false, pageSize: 40 },
-    { type: "movie", id: "xh_channel", name: "xHamster · Channel", extra: [{ name: "channel", isRequired: false }, { name: "sort", isRequired: false, options: ["relevance", "newest", "best"] }], showInHome: false, pageSize: 40 }
+    { type: "movie", id: "xh_channel", name: "xHamster · Channel", extra: [{ name: "channel", isRequired: false }, { name: "sort", isRequired: false, options: ["relevance", "newest", "best"] }], showInHome: false, pageSize: 40 },
+    { type: "movie", id: "xh_anime_german_dub", name: "Anime · German Dub", extra: [], showInHome: true, pageSize: 40 },
+    { type: "movie", id: "xh_films_german_dub", name: "xHamster Filme · German Dub", extra: [], showInHome: true, pageSize: 40 },
+    { type: "movie", id: "xh_german_studios", name: "German Studios", extra: [], showInHome: true, pageSize: 40 }
   ],
   behaviorHints: { adult: true, configurable: false }
 };
