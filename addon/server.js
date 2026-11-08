@@ -8,9 +8,9 @@ const manifest = {
   description: "xHamster-Kollektion und Suche über den konfigurierten Apify Actor. Wiedergabe wird nur angeboten, wenn ein direkter Medienstream verifiziert vorliegt.",
   resources: ["catalog", "meta", "stream"],
   types: ["movie"],
-  idPrefixes: ["xh:"],
+  idPrefixes: ["xh:", "tps:"],
   catalogs: [
-    { type: "movie", id: "xh_latest", name: "xHamster", extra: [], showInHome: true, pageSize: 40 },
+    { type: "movie", id: "tps_german_dub_movies", name: "TubePornstars · German Dub Filme (90+ Min.)", extra: [], showInHome: true, pageSize: 40 },\n    { type: "movie", id: "xh_latest", name: "xHamster", extra: [], showInHome: true, pageSize: 40 },
     { type: "movie", id: "xh_search", name: "xHamster · Suche", extra: [{ name: "search", isRequired: false }, { name: "sort", isRequired: false, options: ["relevance", "newest", "best"] }], showInHome: true, pageSize: 40 },
     { type: "movie", id: "xh_category", name: "xHamster · Kategorie", extra: [{ name: "category", isRequired: false }, { name: "sort", isRequired: false, options: ["relevance", "newest", "best"] }], showInHome: false, pageSize: 40 },
     { type: "movie", id: "xh_tag", name: "xHamster · Tag", extra: [{ name: "tag", isRequired: false }, { name: "sort", isRequired: false, options: ["relevance", "newest", "best"] }], showInHome: false, pageSize: 40 },
@@ -23,16 +23,16 @@ const manifest = {
   behaviorHints: { adult: true, configurable: false }
 };
 
-const builder = new addonBuilder(manifest);
-builder.defineCatalogHandler(args => scraper.catalog(args).catch(error => {
+const tubepornstars = require("./tubepornstars");\nconst builder = new addonBuilder(manifest);
+builder.defineCatalogHandler(args => (args.id === "tps_german_dub_movies" ? tubepornstars.catalog(args) : scraper.catalog(args)).catch(error => {
   console.error("[xHamster catalog] request failed:", error?.stack || error);
   return { metas: [], cacheMaxAge: 60 };
 }));
-builder.defineMetaHandler(args => scraper.metadata(args.id).catch(error => {
+builder.defineMetaHandler(args => (String(args.id || "").startsWith("tps:") ? tubepornstars.metadata(args.id) : scraper.metadata(args.id)).catch(error => {
   console.error("[xHamster metadata] request failed:", error?.stack || error);
   return { meta: null };
 }));
-builder.defineStreamHandler(args => scraper.streams(args.id).catch(error => {
+builder.defineStreamHandler(args => (String(args.id || "").startsWith("tps:") ? tubepornstars.streams(args.id) : scraper.streams(args.id)).catch(error => {
   console.error("[xHamster streams] request failed:", error?.stack || error);
   return { streams: [] };
 }));
