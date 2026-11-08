@@ -155,18 +155,18 @@ function searchableMetadata(item) {
 
 function matchesGermanDub(item) {
   const text = searchableMetadata(item);
-  return /\\b(german\\s*dub(?:bed)?|deutsch\\s*synchronisiert|deutsche\\s*synchronisation|deutsche\\s*synchro|german\\s*audio|deutsch\\s*vertont)\\b/i.test(text);
+  return /\b(german\s*dub(?:bed)?|deutsch\s*synchronisiert|deutsche\s*synchronisation|deutsche\s*synchro|german\s*audio|deutsch\s*vertont)\b/i.test(text);
 }
 
 function matchesAnime(item) {
-  return /\\b(anime|hentai|japanese\\s*animation)\\b/i.test(searchableMetadata(item));
+  return /\b(anime|hentai|japanese\s*animation)\b/i.test(searchableMetadata(item));
 }
 
 function matchesGermanStudio(item) {
   const studioFields = [item?.studio, item?.channel, item?.channelName, item?.channels]
     .flatMap(value => Array.isArray(value) ? value : [value])
     .map(asText).join(" ").toLowerCase();
-  return /\\b(german|deutsch|germany|deutschland)\\b/i.test(studioFields);
+  return /\b(german|deutsch|germany|deutschland)\b/i.test(studioFields);
 }
 
 async function catalog(args = {}) {
