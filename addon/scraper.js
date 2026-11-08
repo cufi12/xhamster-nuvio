@@ -117,7 +117,7 @@ function actorInput(args = {}) {
 }
 
 async function runActor(input) {
-  const token = process.env.APIFY_TOKEN;
+  const token = process.env.APIFY_TOKEN || process.env.APIFY_API_TOKEN || process.env.APIFY_API_KEY;
   if (!token) {
     console.warn("[xHamster] APIFY_TOKEN is not configured");
     return [];
