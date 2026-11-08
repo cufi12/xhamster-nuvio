@@ -295,18 +295,29 @@ async function verifyMediaUrl(candidate) {
 async function streams(id) {
   const video = await getVideo(id);
   if (!video) return { streams: [] };
+  const candidates = [...new Set(video.mediaCandidates || [])];
+  // Prefer HLS playlists: Nuvio can use adaptive bitrate where its player supports HLS.
+  // Keep verified MP4/direct files as fallback, rather than treating an unverified
+  // playlist as playable.
+  candidates.sort((a, b) => {
+    const isHls = value => /\\.m3u8(?:$|[?#])/i.test(value);
+    return Number(isHls(b)) - Number(isHls(a));
+  });
   const verified = [];
-  for (const candidate of (video.mediaCandidates || []).slice(0, 4)) {
+  for (const candidate of candidates.slice(0, 6)) {
     const url = await verifyMediaUrl(candidate);
     if (url && !verified.includes(url)) verified.push(url);
   }
   // Never expose trailer/preview URLs as playback streams.
   return {
-    streams: verified.map((url, index) => ({
-      name: "Apify verified direct media",
-      title: video.title + (verified.length > 1 ? " · Quelle " + (index + 1) : ""),
-      url
-    }))
+    streams: verified.map((url, index) => {
+      const hls = /\\.m3u8(?:$|[?#])/i.test(url);
+      return {
+        name: hls ? "HLS (adaptiv)" : "MP4 / Direktstream (Fallback)",
+        title: video.title + (verified.length > 1 ? " · " + (hls ? "HLS" : "Fallback " + index) : ""),
+        url
+      };
+    })
   };
 }
 
