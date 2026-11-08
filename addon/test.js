@@ -1,6 +1,7 @@
 const assert = require("node:assert/strict");
 const scraper = require("./scraper");
 const ixxx = require("./ixxx");
+const { createServer, parseRoute } = require("./server");
 
 (async () => {
   // xHamster external-search catalog.
@@ -55,5 +56,37 @@ const ixxx = require("./ixxx");
     global.fetch = originalFetch;
   }
 
-  console.log("CVN catalog tests passed (xHamster links + iXXX parser/catalog).");
+  // HTTP protocol integration tests for the dependency-free server.
+  const parsedRoute = parseRoute("/catalog/movie/xh_search/search=cats%20%26%20dogs.json", new URLSearchParams());
+  assert.deepEqual(parsedRoute, {
+    resource: "catalog", type: "movie", id: "xh_search", extra: { search: "cats & dogs" }
+  });
+
+  const server = createServer();
+  await new Promise(resolve => server.listen(0, "127.0.0.1", resolve));
+  const base = "http://127.0.0.1:" + server.address().port;
+  try {
+    const manifestResponse = await fetch(base + "/manifest.json");
+    assert.equal(manifestResponse.status, 200);
+    assert.equal((await manifestResponse.json()).id, "community.nuvio.xhamster-links");
+
+    const catalogResponse = await fetch(base + "/catalog/movie/xh_search/search=" + encodeURIComponent("cats & dogs") + ".json");
+    assert.equal(catalogResponse.status, 200);
+    const httpCatalog = await catalogResponse.json();
+    assert.equal(httpCatalog.metas.length, 1);
+    assert.equal(httpCatalog.metas[0].name, "xHamster-Suche: cats & dogs");
+
+    const metaResponse = await fetch(base + "/meta/movie/" + encodeURIComponent(httpCatalog.metas[0].id) + ".json");
+    assert.equal((await metaResponse.json()).meta.website, httpCatalog.metas[0].website);
+
+    const streamResponse = await fetch(base + "/stream/movie/" + encodeURIComponent(httpCatalog.metas[0].id) + ".json");
+    assert.equal((await streamResponse.json()).streams[0].externalUrl, httpCatalog.metas[0].website);
+
+    const methodResponse = await fetch(base + "/manifest.json", { method: "POST" });
+    assert.equal(methodResponse.status, 405);
+  } finally {
+    await new Promise((resolve, reject) => server.close(error => error ? reject(error) : resolve()));
+  }
+
+  console.log("CVN catalog tests passed (xHamster links + iXXX parser/catalog + HTTP protocol).");
 })().catch(error => { console.error(error); process.exitCode = 1; });
