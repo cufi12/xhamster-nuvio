@@ -6,19 +6,14 @@ Repository-URL für Nuvio unter **Einstellungen → Content & Discovery → Plug
 
 https://raw.githubusercontent.com/cufi12/xhamster-nuvio/add-xhamster-provider/manifest.json
 
-Aktivierte Provider:
-- **xHamster** – bestehender Such-Provider über den verbundenen Apify-Dienst.
+Aktivierter Provider:
 - **CVN · Open Culture Archive** – sucht im Internet Archive nach Filmdateien, deren Metadaten ausdrücklich eine Creative-Commons- oder Public-Domain-Lizenz nennen.
 
 Der Open-Culture-Provider benötigt einen TMDB API Key in seinen Provider-Einstellungen. Er gibt höchstens drei passende Archivtreffer zurück und prüft vor der Ausgabe die Lizenzmetadaten sowie das Dateiformat. Die Archivsuche kann trotzdem unpassende oder nicht abspielbare Treffer liefern; eine Lizenzangabe in Archivmetadaten ist keine unabhängige Rechtsberatung.
 
-## Separates xHamster-Katalog-Addon
+## Entfernte Integration
 
-Für das Durchsuchen des xHamster-Katalogs brauchst du zusätzlich das eigenständige Addon:
-
-https://cvn-xhamster-catalog.onrender.com/manifest.json
-
-Dieses wird im Bereich **Addons** installiert, nicht unter Plugins.
+Der xHamster-Provider wurde aus dem aktiven Nuvio-Manifest entfernt, weil sein Backend Apify voraussetzte und ohne funktionierende Apify-Anbindung keine Suchergebnisse lieferte. Es wird kein Ersatz-Scraper als funktionsfähig ausgegeben, solange Quelle, Nutzungsbedingungen und Wiedergabe nicht zuverlässig geprüft sind.
 
 ## Wichtige technische Grenzen
 
