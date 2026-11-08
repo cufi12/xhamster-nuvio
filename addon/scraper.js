@@ -140,12 +140,41 @@ async function runActor(input) {
 }
 
 function catalogIds() {
-  return new Set(["xh_latest", "xh_search", "xh_category", "xh_tag", "xh_creator", "xh_channel"]);
+  return new Set(["xh_latest", "xh_search", "xh_category", "xh_tag", "xh_creator", "xh_channel", "xh_anime_german_dub", "xh_films_german_dub", "xh_german_studios"]);
+}
+
+function searchableMetadata(item) {
+  const values = [];
+  for (const key of ["title", "name", "description", "categories", "tags", "channels", "channel", "studio", "uploader", "creator"]) {
+    const value = item?.[key];
+    if (Array.isArray(value)) values.push(...value.map(asText));
+    else if (value !== undefined && value !== null) values.push(asText(value));
+  }
+  return values.join(" ").toLowerCase();
+}
+
+function matchesGermanDub(item) {
+  const text = searchableMetadata(item);
+  return /\\b(german\\s*dub(?:bed)?|deutsch\\s*synchronisiert|deutsche\\s*synchronisation|deutsche\\s*synchro|german\\s*audio|deutsch\\s*vertont)\\b/i.test(text);
+}
+
+function matchesAnime(item) {
+  return /\\b(anime|hentai|japanese\\s*animation)\\b/i.test(searchableMetadata(item));
+}
+
+function matchesGermanStudio(item) {
+  const studioFields = [item?.studio, item?.channel, item?.channelName, item?.channels]
+    .flatMap(value => Array.isArray(value) ? value : [value])
+    .map(asText).join(" ").toLowerCase();
+  return /\\b(german|deutsch|germany|deutschland)\\b/i.test(studioFields);
 }
 
 async function catalog(args = {}) {
   if (args.type !== "movie" || !catalogIds().has(String(args.id || ""))) return { metas: [], cacheMaxAge: 300 };
   const input = actorInput(args);
+  if (args.id === "xh_anime_german_dub") input.searchQuery = "German Dub Anime";
+  if (args.id === "xh_films_german_dub") input.searchQuery = "German Dub";
+  if (args.id === "xh_german_studios") input.searchQuery = "German studio";
   if (args.id === "xh_latest") {
     // The actor has no global homepage mode: an empty input returns no items.
     // Use its documented prefilled category as the default home catalog.
@@ -155,7 +184,10 @@ async function catalog(args = {}) {
   const idToField = { xh_category: "category", xh_tag: "tag", xh_creator: "pornstar", xh_channel: "channel" };
   const field = idToField[args.id];
   if (field && !input[field]) return { metas: [], cacheMaxAge: 120 };
-  const items = await runActor(input);
+  let items = await runActor(input);
+  if (args.id === "xh_anime_german_dub") items = items.filter(item => matchesAnime(item) && matchesGermanDub(item));
+  if (args.id === "xh_films_german_dub") items = items.filter(item => !matchesAnime(item) && matchesGermanDub(item));
+  if (args.id === "xh_german_studios") items = items.filter(matchesGermanStudio);
   const metas = items.map(item => {
     const video = normalize(item);
     if (!video.title || !video.pageUrl) return null;
