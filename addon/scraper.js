@@ -179,8 +179,8 @@ function matchesGermanStudio(item) {
 async function catalog(args = {}) {
   if (args.type !== "movie" || !catalogIds().has(String(args.id || ""))) return { metas: [], cacheMaxAge: 300 };
   const input = actorInput(args);
-  if (args.id === "xh_anime_german_dub") input.searchQuery = "German Dub Anime";
-  if (args.id === "xh_films_german_dub") input.searchQuery = "German Dub";
+  if (args.id === "xh_anime_german_dub") input.searchQuery = "Anime";
+  if (args.id === "xh_films_german_dub") input.searchQuery = "Full Movie";
   if (args.id === "xh_german_studios") input.searchQuery = "German studio";
   if (args.id === "xh_latest") {
     // The actor has no global homepage mode: an empty input returns no items.
@@ -191,9 +191,27 @@ async function catalog(args = {}) {
   const idToField = { xh_category: "category", xh_tag: "tag", xh_creator: "pornstar", xh_channel: "channel" };
   const field = idToField[args.id];
   if (field && !input[field]) return { metas: [], cacheMaxAge: 120 };
-  let items = await runActor(input);
-  if (args.id === "xh_anime_german_dub") items = items.filter(item => matchesAnime(item) && matchesGermanDub(item));
-  if (args.id === "xh_films_german_dub") items = items.filter(item => !matchesAnime(item) && matchesGermanDub(item));
+  let items;
+  if (args.id === "xh_films_german_dub") {
+    // Build the film shelf from complete/full-movie searches, regardless of audio language.
+    const queries = ["Full Movie", "Complete Movie", "Kompletter Film", "Ganzer Film"];
+    const batches = await Promise.all(queries.map(searchQuery =>
+      runActor({ ...input, searchQuery, sort: "relevance" }).catch(error => {
+        console.warn("[xHamster] film search failed:", searchQuery, error.message);
+        return [];
+      })
+    ));
+    const seen = new Set();
+    items = batches.flat().filter(item => {
+      const url = pageUrlOf(item);
+      if (!url || seen.has(url)) return false;
+      seen.add(url);
+      return !matchesAnime(item);
+    });
+  } else {
+    items = await runActor(input);
+  }
+  if (args.id === "xh_anime_german_dub") items = items.filter(matchesAnime);
   if (args.id === "xh_german_studios") items = items.filter(matchesGermanStudio);
   const metas = items.map(item => {
     const video = normalize(item);
