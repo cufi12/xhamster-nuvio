@@ -170,6 +170,6 @@ async function streams() {
 }
 
 module.exports = {
-  catalog, metadata, streams, parseCards, durationSeconds,
+  catalog, metadata, streams, parseCards, durationSeconds, encodeId, decodeId,
   filterItems, isGermanDub, isAnime, MIN_FEATURE_SECONDS, SOURCES
 };
