@@ -154,8 +154,15 @@ function searchableMetadata(item) {
 }
 
 function matchesGermanDub(item) {
-  const text = searchableMetadata(item);
-  return /\b(german\s*dub(?:bed)?|deutsch\s*synchronisiert|deutsche\s*synchronisation|deutsche\s*synchro|german\s*audio|deutsch\s*vertont)\b/i.test(text);
+  // Decide from the actual description/body text only, never from the title.
+  const descriptionFields = ["description", "summary", "text", "details", "content", "body"];
+  const description = descriptionFields
+    .map(key => item?.[key])
+    .flatMap(value => Array.isArray(value) ? value : [value])
+    .filter(value => typeof value === "string")
+    .join(" ")
+    .toLowerCase();
+  return /\\b(german\\s*dub(?:bed)?|dubbed\\s*in\\s*german|deutsch\\s*synchronisiert|deutsche\\s*synchronisation|deutsche\\s*synchro|german\\s*audio|deutsch\\s*vertont)\\b/i.test(description);
 }
 
 function matchesAnime(item) {
