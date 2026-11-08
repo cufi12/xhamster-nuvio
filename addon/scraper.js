@@ -169,6 +169,15 @@ function matchesAnime(item) {
   return /\b(anime|hentai|japanese\s*animation)\b/i.test(searchableMetadata(item));
 }
 
+function isPlayableFullEntry(item, minimumSeconds = 600) {
+  const type = asText(item?.videoType).toLowerCase();
+  const title = asText(item?.title).toLowerCase();
+  const duration = Number(first(item, ["durationSeconds", "duration"]));
+  if (type && !["video", "full", "movie"].includes(type)) return false;
+  if (/\b(preview|trailer|teaser|clip|excerpt|vorschau|ausschnitt|szene)\b/i.test(title)) return false;
+  return Number.isFinite(duration) && duration >= minimumSeconds;
+}
+
 function matchesGermanStudio(item) {
   const studioFields = [item?.studio, item?.channel, item?.channelName, item?.channels]
     .flatMap(value => Array.isArray(value) ? value : [value])
@@ -179,8 +188,8 @@ function matchesGermanStudio(item) {
 async function catalog(args = {}) {
   if (args.type !== "movie" || !catalogIds().has(String(args.id || ""))) return { metas: [], cacheMaxAge: 300 };
   const input = actorInput(args);
-  if (args.id === "xh_anime_german_dub") input.searchQuery = "Anime";
-  if (args.id === "xh_films_german_dub") input.searchQuery = "Full Movie";
+  if (args.id === "xh_anime_german_dub") input.category = "anime";
+  if (args.id === "xh_films_german_dub") input.category = "full-movie";
   if (args.id === "xh_german_studios") input.searchQuery = "German studio";
   if (args.id === "xh_latest") {
     // The actor has no global homepage mode: an empty input returns no items.
@@ -193,25 +202,11 @@ async function catalog(args = {}) {
   if (field && !input[field]) return { metas: [], cacheMaxAge: 120 };
   let items;
   if (args.id === "xh_films_german_dub") {
-    // Build the film shelf from complete/full-movie searches, regardless of audio language.
-    const queries = ["Full Movie", "Complete Movie", "Kompletter Film", "Ganzer Film"];
-    const batches = await Promise.all(queries.map(searchQuery =>
-      runActor({ ...input, searchQuery, sort: "relevance" }).catch(error => {
-        console.warn("[xHamster] film search failed:", searchQuery, error.message);
-        return [];
-      })
-    ));
-    const seen = new Set();
-    items = batches.flat().filter(item => {
-      const url = pageUrlOf(item);
-      if (!url || seen.has(url)) return false;
-      seen.add(url);
-      return !matchesAnime(item);
-    });
-  } else {
-    items = await runActor(input);
-  }
-  if (args.id === "xh_anime_german_dub") items = items.filter(matchesAnime);
+    // Use xHamster's own "Full Movie" filter, not keyword guesses.
+    items = await runActor({ ...input, category: "full-movie", sort: "relevance" });
+    items = items.filter(item => isPlayableFullEntry(item, 1200) && !matchesAnime(item));
+
+  if (args.id === "xh_anime_german_dub") items = items.filter(item => matchesAnime(item) && isPlayableFullEntry(item, 600));
   if (args.id === "xh_german_studios") items = items.filter(matchesGermanStudio);
   const metas = items.map(item => {
     const video = normalize(item);
@@ -303,24 +298,13 @@ async function streams(id) {
     const url = await verifyMediaUrl(candidate);
     if (url && !verified.includes(url)) verified.push(url);
   }
-  const previewStreams = [];
-  for (const candidate of (video.previewCandidates || []).slice(0, 2)) {
-    const url = await verifyMediaUrl(candidate);
-    if (url && !verified.includes(url) && !previewStreams.includes(url)) previewStreams.push(url);
-  }
+  // Never expose trailer/preview URLs as playback streams.
   return {
-    streams: [
-      ...verified.map((url, index) => ({
-        name: "Apify verified direct media",
-        title: video.title + (verified.length > 1 ? " · Quelle " + (index + 1) : ""),
-        url
-      })),
-      ...previewStreams.map((url, index) => ({
-        name: "Vorschau · kein vollständiges Video",
-        title: video.title + " · Vorschau" + (previewStreams.length > 1 ? " " + (index + 1) : ""),
-        url
-      }))
-    ]
+    streams: verified.map((url, index) => ({
+      name: "Apify verified direct media",
+      title: video.title + (verified.length > 1 ? " · Quelle " + (index + 1) : ""),
+      url
+    }))
   };
 }
 
