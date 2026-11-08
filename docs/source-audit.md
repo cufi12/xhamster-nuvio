@@ -1,17 +1,12 @@
-# Quellen-Audit – 7. November 2026
+# Quellen-Audit – 8. November 2026
 
 Dieses Audit trennt kostenlose Recherche-Kandidaten von technisch integrierbaren Nuvio-Streams. Ein technisch erreichbarer Stream ist nicht automatisch lizenziert.
 
-## xHamster – separater Nuvio-Provider
+## xHamster – entfernt
 
-Auf ausdrücklichen Nutzerwunsch wird xHamster als eigener Provider im Nuvio-Manifest geführt. Er ist **nicht** Teil der drei Kategorien des Gratis-/Deutsch-Katalogs.
+Der xHamster-Provider wurde aus dem aktiven Nuvio-Manifest entfernt. Die bisherige Implementierung rief einen Apify-Actor auf und konnte ohne gültige Apify-Konfiguration keine Katalogdaten liefern. Ein unabhängiger Ersatz wurde nicht als zuverlässig bestätigt; deshalb wird kein nicht getesteter Scraper aktiviert.
 
-- Die Nuvio-TMDB-ID wird über einen vom Nutzer in den Provider-Einstellungen hinterlegten TMDB API Key in einen Filmtitel aufgelöst.
-- Die Suche erfolgt über den bestehenden Apify-Backend-Dienst.
-- Das Backend gibt nur direkte Medien-URLs zurück, die einen Medien-Content-Type-Test bestanden haben.
-- Dieser technische Test bestätigt weder Urheberschaft noch Verbreitungsrechte. Es gibt keine pauschale Aussage, dass Inhalte auf xHamster autorisiert oder kostenlos nutzbar sind.
-- Keine Umgehung von Anmeldung, Altersprüfung, CAPTCHA, DRM, Paywall oder Anti-Bot-Schutz.
-- Ein echter Nuvio-Plugin- und Wiedergabetest steht noch aus.
+Es werden keine Logins, Altersprüfungen, CAPTCHAs, DRM, Paywalls oder Anti-Bot-Schutz umgangen. Der separate Render-Backend-Dienst wird durch diese Manifest-Änderung nicht automatisch gelöscht; er ist damit aber nicht mehr als aktiver Nuvio-Provider registriert.
 
 ## Ergebnis je ursprünglicher Kategorie
 
@@ -30,7 +25,7 @@ Recherche-Kandidaten, noch nicht als Nuvio-Quelle freigegeben:
 
 ### 3. Hentai – German Dub
 
-Kein belastbarer, kostenloser, öffentlich zugänglicher und lizenzierter Anbieter mit nachgewiesener deutscher Synchron-Tonspur wurde in dieser Recherche bestätigt. Anime-Loads, HentaiCloud und HentaiZilla bleiben ungeprüfte Recherche-Hinweise und werden nicht als Stream-Quellen eingebunden.
+Kein belastbarer, kostenloser, öffentlich zugänglicher und lizenzierter Anbieter mit nachgewiesener deutscher Synchron-Tonspur wurde in dieser Recherche bestätigt. Ungeprüfte Recherche-Hinweise werden nicht als Stream-Quellen eingebunden.
 
 ## Freigabekriterien pro Titel
 
@@ -43,4 +38,4 @@ Kein belastbarer, kostenloser, öffentlich zugänglicher und lizenzierter Anbiet
 
 ## Status
 
-Der xHamster-Provider ist technisch registriert, benötigt aber einen TMDB API Key und einen End-to-End-Test. Die drei ursprünglichen Provider bleiben deaktiviert, bis Quellen und Streams verifiziert sind.
+Der xHamster-Provider ist aus dem aktiven Manifest entfernt. Open Culture Archive bleibt aktiviert; die übrigen Provider bleiben deaktiviert, bis Quellen und Streams verifiziert sind.
