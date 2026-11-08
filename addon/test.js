@@ -23,7 +23,19 @@ const ixxx = require("./ixxx");
     trailerUrl: "https://cdn.example/preview.mp4"
   };
   const normalized = scraper.normalize(item);
-  assert.equal(normalized.title, "Example");
+
+  assert.equal(scraper.isPlayableFullEntry({ title: "Full film", duration: 4800 }), true);
+  assert.equal(scraper.isPlayableFullEntry({ title: "Full film", duration: 7200 }), true);
+  assert.equal(scraper.isPlayableFullEntry({ title: "Full film", duration: 4799 }), false);
+  assert.equal(scraper.isPlayableFullEntry({ title: "Full film", duration: 7201 }), false);
+  assert.equal(scraper.isPlayableFullEntry({ title: "Trailer", duration: 6000 }), false);
+  assert.equal(scraper.matchesGermanDub({ title: "German Dub", description: "German audio" }), true);
+  assert.equal(scraper.matchesGermanDub({ title: "German Dub", description: "A great movie" }), false);
+  assert.equal(scraper.matchesAnime({ title: "Japanese Anime feature" }), true);
+  assert.equal(scraper.matchesGermanStudio({ studio: "Magma" }), true);
+  assert.equal(scraper.matchesGermanStudio({ channel: "MMV Films" }), true);
+  assert.equal(scraper.matchesGermanStudio({ studio: "Other German Studio" }), false);
+\n  assert.equal(normalized.title, "Example");
   assert.equal(normalized.pageUrl, "https://xhamster.com/videos/example");
   assert.deepEqual(normalized.tags, ["tag-a", "tag-b"]);
   assert.deepEqual(normalized.previewCandidates, ["https://cdn.example/preview.mp4"]);
