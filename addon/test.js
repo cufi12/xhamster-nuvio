@@ -1,12 +1,12 @@
 const assert = require("node:assert/strict");
 const scraper = require("./scraper");
-const ixxx = require("./ixxx");
-const { createServer, parseRoute } = require("./server");
+const { createServer, parseRoute, manifest } = require("./server");
 
 (async () => {
-  // xHamster external-search catalog.
+  assert.deepEqual(manifest.catalogs.map(c => c.id), ["xh_search"]);
+  assert.deepEqual(manifest.idPrefixes, ["xhlink:"]);
+  assert.equal(manifest.name, "CVN xHamster Links");
   assert.deepEqual(await scraper.catalog({ type: "movie", id: "xh_search" }), { metas: [], cacheMaxAge: 60 });
-  assert.deepEqual(await scraper.catalog({ type: "movie", id: "xh_latest" }), { metas: [], cacheMaxAge: 300 });
   assert.equal(scraper.queryFrom({ extra: { search: "  cats & dogs  " } }), "cats & dogs");
   assert.equal(scraper.searchUrl("cats & dogs"), "https://xhamster.com/search/cats%20%26%20dogs");
   const search = await scraper.catalog({ type: "movie", id: "xh_search", extra: { search: "cats & dogs" } });
@@ -21,72 +21,30 @@ const { createServer, parseRoute } = require("./server");
   assert.deepEqual(await scraper.metadata("legacy:x"), { meta: null });
   assert.equal(scraper.encodeId("https://evil.example/search/test"), "");
 
-  // iXXX parser and filtering are tested with a local fixture; no external site is fetched.
-  assert.equal(ixxx.durationSeconds("01:35:00"), 5700);
-  assert.equal(ixxx.durationSeconds("42:10"), 2530);
-  const fixture = `
-    <div class="card sub group" data-public-id="abcd1234">
-      <a class="item-title" title="Example German Dub Feature Film" href="/out/abcd1234">Example</a>
-      <img src="https://www.ixxx.com/poster.jpg">
-      <span class="badge">01:35:00</span>
-      <a class="item-source" href="https://www.ixxx.com/source">Source Name</a>
-    </div>
-    <div class="card sub group" data-public-id="short123">
-      <a class="item-title" title="German Dub Clip" href="/out/short123">Clip</a>
-      <span class="badge">00:02:00</span>
-    </div>`;
-  const parsed = ixxx.parseCards(fixture);
-  assert.equal(parsed.length, 2);
-  assert.equal(parsed[0].outUrl, "https://www.ixxx.com/out/abcd1234");
-  assert.equal(ixxx.filterItems(parsed, "german-movies").length, 1);
-  assert.equal(ixxx.filterItems(parsed, "german-movies")[0].publicId, "abcd1234");
-  assert.equal(ixxx.decodeId("ixx:" + Buffer.from("abcd1234").toString("base64url")), "abcd1234");
-  assert.equal(ixxx.decodeId("ixx:../../bad"), "");
-
-  const originalFetch = global.fetch;
-  global.fetch = async () => new Response(fixture, { status: 200, headers: { "content-type": "text/html" } });
-  try {
-    const catalog = await ixxx.catalog({ type: "movie", id: "ixxx_german_dub_movies" });
-    assert.equal(catalog.metas.length, 1);
-    assert.equal(catalog.metas[0].name, "Example German Dub Feature Film");
-    assert.match(catalog.metas[0].id, /^ixx:/);
-    assert.deepEqual(await ixxx.streams(catalog.metas[0].id), { streams: [] });
-    assert.deepEqual(await ixxx.metadata("ixx:unknown"), { meta: null });
-  } finally {
-    global.fetch = originalFetch;
-  }
-
-  // HTTP protocol integration tests for the dependency-free server.
   const parsedRoute = parseRoute("/catalog/movie/xh_search/search=cats%20%26%20dogs.json", new URLSearchParams());
-  assert.deepEqual(parsedRoute, {
-    resource: "catalog", type: "movie", id: "xh_search", extra: { search: "cats & dogs" }
-  });
-
+  assert.deepEqual(parsedRoute, { resource: "catalog", type: "movie", id: "xh_search", extra: { search: "cats & dogs" } });
   const server = createServer();
   await new Promise(resolve => server.listen(0, "127.0.0.1", resolve));
   const base = "http://127.0.0.1:" + server.address().port;
   try {
     const manifestResponse = await fetch(base + "/manifest.json");
     assert.equal(manifestResponse.status, 200);
-    assert.equal((await manifestResponse.json()).id, "community.nuvio.xhamster-links");
-
+    const httpManifest = await manifestResponse.json();
+    assert.equal(httpManifest.id, "community.nuvio.xhamster-links");
+    assert.deepEqual(httpManifest.catalogs.map(c => c.id), ["xh_search"]);
+    assert.equal(httpManifest.idPrefixes.includes("ixx:"), false);
     const catalogResponse = await fetch(base + "/catalog/movie/xh_search/search=" + encodeURIComponent("cats & dogs") + ".json");
     assert.equal(catalogResponse.status, 200);
     const httpCatalog = await catalogResponse.json();
     assert.equal(httpCatalog.metas.length, 1);
     assert.equal(httpCatalog.metas[0].name, "xHamster-Suche: cats & dogs");
-
     const metaResponse = await fetch(base + "/meta/movie/" + encodeURIComponent(httpCatalog.metas[0].id) + ".json");
     assert.equal((await metaResponse.json()).meta.website, httpCatalog.metas[0].website);
-
     const streamResponse = await fetch(base + "/stream/movie/" + encodeURIComponent(httpCatalog.metas[0].id) + ".json");
     assert.equal((await streamResponse.json()).streams[0].externalUrl, httpCatalog.metas[0].website);
-
-    const methodResponse = await fetch(base + "/manifest.json", { method: "POST" });
-    assert.equal(methodResponse.status, 405);
+    assert.equal((await fetch(base + "/manifest.json", { method: "POST" })).status, 405);
   } finally {
     await new Promise((resolve, reject) => server.close(error => error ? reject(error) : resolve()));
   }
-
-  console.log("CVN catalog tests passed (xHamster links + iXXX parser/catalog + HTTP protocol).");
+  console.log("CVN xHamster-only catalog tests passed.");
 })().catch(error => { console.error(error); process.exitCode = 1; });
