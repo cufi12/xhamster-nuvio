@@ -1,6 +1,6 @@
 {
   "name": "CVN Gratis-Katalog",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "scrapers": [
     {
       "id": "cvn-xhamster",
@@ -13,6 +13,18 @@
       "enabled": true,
       "hasSettings": true,
       "contentLanguage": ["und"]
+    },
+    {
+      "id": "cvn-open-culture-archive",
+      "name": "CVN · Open Culture Archive",
+      "description": "Durchsucht Internet Archive nach Filmen mit expliziter Creative-Commons- oder Public-Domain-Lizenz.",
+      "version": "1.0.0",
+      "author": "CVN",
+      "supportedTypes": ["movie", "tv"],
+      "filename": "providers/open-culture-archive.js",
+      "enabled": true,
+      "hasSettings": true,
+      "contentLanguage": ["und", "en", "de"]
     },
     {
       "id": "cvn-de-studios",
