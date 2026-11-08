@@ -39,7 +39,7 @@ const ixxx = require("./ixxx");
   assert.equal(parsed[0].outUrl, "https://www.ixxx.com/out/abcd1234");
   assert.equal(ixxx.filterItems(parsed, "german-movies").length, 1);
   assert.equal(ixxx.filterItems(parsed, "german-movies")[0].publicId, "abcd1234");
-  assert.equal(ixxx.decodeId(ixxx.encodeId("abcd1234")), "abcd1234");
+  assert.equal(ixxx.decodeId("ixx:" + Buffer.from("abcd1234").toString("base64url")), "abcd1234");
   assert.equal(ixxx.decodeId("ixx:../../bad"), "");
 
   const originalFetch = global.fetch;
