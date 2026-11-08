@@ -73,7 +73,7 @@ function normalize(item) {
   const title = asText(first(item, ["title", "name", "videoTitle"])) || "Untitled video";
   const pageUrl = pageUrlOf(item);
   const poster = asText(first(item, ["thumbnail", "thumbnailUrl", "thumb", "image", "imageUrl", "poster", "posterUrl"]));
-  const description = asText(first(item, ["description", "summary", "text"]));
+  const description = asText(first(item, ["description", "videoDescription", "descriptionText", "metaDescription", "summary", "text"]));
   const duration = first(item, ["duration", "durationSeconds", "length"]);
   const creator = asText(first(item, ["pornstar", "creator", "performer", "author", "uploader"]));
   const channel = asText(first(item, ["channel", "channelName", "studio"]));
@@ -155,14 +155,14 @@ function searchableMetadata(item) {
 
 function matchesGermanDub(item) {
   // Decide from the actual description/body text only, never from the title.
-  const descriptionFields = ["description", "summary", "text", "details", "content", "body"];
+  const descriptionFields = ["description", "videoDescription", "descriptionText", "metaDescription", "summary", "text", "details", "content", "body"];
   const description = descriptionFields
     .map(key => item?.[key])
     .flatMap(value => Array.isArray(value) ? value : [value])
     .filter(value => typeof value === "string")
     .join(" ")
     .toLowerCase();
-  return /\b(german\s*dub(?:bed)?|dubbed\s*in\s*german|deutsch\s*synchronisiert|deutsche\s*synchronisation|deutsche\s*synchro|german\s*audio|deutsch\s*vertont)\b/i.test(description);
+  return /\b(german\s*dub(?:bed)?|dubbed\s*in\s*german|in\s*german|german\s*(?:language|audio|version|voiceover)|deutsch\s*synchronisiert|deutsche\s*(?:synchronisation|synchro|fassung|tonspur)|deutschsprachig|deutsch\s*vertont)\b/i.test(description);
 }
 
 function matchesAnime(item) {
