@@ -1,24 +1,23 @@
 # CVN Multi-Plattform-Katalog (Addon)
 
-Eigenständiges Stremio-kompatibles Addon für Nuvio. Es ist getrennt vom Nuvio-Scraper-Plugin im Repository-Root.
+Eigenständiges Stremio-kompatibles Addon für Nuvio.
 
 ## Live-Betrieb
 
 Manifest: `https://cvn-xhamster-catalog.onrender.com/manifest.json`
 
-Der Katalog **xHamster** liefert eine eigene Startseiten-Reihe mit neuesten Treffern. Zusätzlich gibt es **xHamster · Suche** sowie optionale Filterkataloge für Kategorie, Tag, Creator und Channel.
+Die Startseite enthält vier getrennte iXXX-Verzeichniskataloge:
 
-## Plattformstatus
+- **German Dub · Spielfilme:** nur Titel mit ausdrücklich angegebener deutscher Synchronisation und mindestens 90 Minuten Laufzeit.
+- **German Dub · Anime:** separate Suche nach Anime mit deutscher Synchronisation.
+- **Deutsche Studios · Magma:** nur Treffer, deren Titel Magma nennt, ab 90 Minuten.
+- **Deutsche Studios · MMV:** nur Treffer, deren Titel MMV nennt, ab 90 Minuten.
 
-- **xHamster:** öffentliche Videoseiten werden durchsucht; direkt veröffentlichte MP4/HLS-Quellen können als Streams zurückgegeben werden.
-- Ein sichtbarer Katalogeintrag bedeutet nicht automatisch, dass die Quelle in Nuvios integriertem Player abspielbar ist.
+Die bisherigen kurzen xHamster-Kataloge sind aus dem Manifest entfernt. Eine neue xHamster-Langfilmquelle kann später ergänzt werden, sobald die konkrete URL vorliegt.
 
-## ID- und Stream-Regeln
+## Quellen und Wiedergabe
 
-- Jeder Film erhält eine deterministische ID aus seiner kanonischen öffentlichen Videoseiten-URL (`xh:` + Base64URL). Änderungen an Titel, Poster oder Beschreibung ändern die ID nicht.
-- Metadaten und Stream-Abfragen verwenden dieselbe ID. Nach einem Serverneustart wird der Datensatz bei Bedarf über die exakte Videoseiten-URL beim Actor erneut gesucht.
-- Stream-Kandidaten aus Actor-Daten werden nicht ungeprüft ausgegeben. Jede URL muss über einen begrenzten HTTP-HEAD- bzw. Range-GET-Test erreichbar sein und einen Video-, HLS- oder DASH-Medientyp liefern. Andernfalls bleibt `streams` leer.
-- Der Stream-Test folgt HTTP-Weiterleitungen, akzeptiert nur HTTP(S) und prüft höchstens vier Kandidaten pro Video. Ein Katalogeintrag allein ist kein Wiedergabenachweis.
+iXXX ist ein Verzeichnis, das Einträge auf externe Anbieter weiterleitet. Der Adapter liest öffentliche Titel-, Laufzeit-, Poster- und Quellenmetadaten aus. Er löst keine externen Redirects auf und gibt keine ungeprüften Medienstreams aus. Deshalb können Einträge im Katalog sichtbar sein, ohne dass die Wiedergabe direkt in Nuvio funktioniert.
 
 ## Lokal starten
 
@@ -35,4 +34,4 @@ Manifest lokal: `http://localhost:7000/manifest.json`
 
 ## Grenzen
 
-Es werden keine Anmeldungen, Altersprüfungen, CAPTCHAs, DRM- oder Anti-Bot-Schutzmechanismen umgangen. Nur öffentlich verfügbare Metadaten und direkt freigegebene Medienquellen werden verwendet.
+Es werden keine Anmeldungen, Altersprüfungen, CAPTCHAs, DRM- oder Anti-Bot-Schutzmechanismen umgangen. Nur öffentlich erreichbare Metadaten und vom Anbieter freigegebene Links werden verwendet.
