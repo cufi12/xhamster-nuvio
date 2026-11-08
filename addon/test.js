@@ -35,7 +35,8 @@ const ixxx = require("./ixxx");
   assert.equal(scraper.matchesGermanStudio({ studio: "Magma" }), true);
   assert.equal(scraper.matchesGermanStudio({ channel: "MMV Films" }), true);
   assert.equal(scraper.matchesGermanStudio({ studio: "Other German Studio" }), false);
-\n  assert.equal(normalized.title, "Example");
+
+  assert.equal(normalized.title, "Example");
   assert.equal(normalized.pageUrl, "https://xhamster.com/videos/example");
   assert.deepEqual(normalized.tags, ["tag-a", "tag-b"]);
   assert.deepEqual(normalized.previewCandidates, ["https://cdn.example/preview.mp4"]);
