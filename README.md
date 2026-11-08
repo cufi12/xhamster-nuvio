@@ -1,6 +1,6 @@
 # CVN Gratis-Katalog für Nuvio
 
-## Nuvio-Plugins
+## Nuvio-Plugin-Repository
 
 Repository-URL für Nuvio unter **Einstellungen → Content & Discovery → Plugins → Add Repository**:
 
@@ -11,9 +11,18 @@ Aktivierter Provider:
 
 Der Open-Culture-Provider benötigt einen TMDB API Key in seinen Provider-Einstellungen. Er gibt höchstens drei passende Archivtreffer zurück und prüft vor der Ausgabe die Lizenzmetadaten sowie das Dateiformat. Die Archivsuche kann trotzdem unpassende oder nicht abspielbare Treffer liefern; eine Lizenzangabe in Archivmetadaten ist keine unabhängige Rechtsberatung.
 
-## Entfernte Integration
+## xHamster-Suche (separates Addon)
 
-Der xHamster-Provider wurde aus dem aktiven Nuvio-Manifest entfernt, weil sein Backend Apify voraussetzte und ohne funktionierende Apify-Anbindung keine Suchergebnisse lieferte. Es wird kein Ersatz-Scraper als funktionsfähig ausgegeben, solange Quelle, Nutzungsbedingungen und Wiedergabe nicht zuverlässig geprüft sind.
+Die Apify-Abhängigkeit wurde entfernt. Statt eines Scrapers gibt es jetzt ein eigenständiges, link-basiertes Addon:
+
+**Addon-Manifest für Nuvio/Stremio-kompatible Addons:**
+https://cvn-xhamster-catalog.onrender.com/manifest.json
+
+**Render-Service:** https://cvn-xhamster-catalog.onrender.com
+
+Das Addon bietet einen Katalog **„xHamster Suche“**. Eine Suchanfrage erzeugt einen Eintrag, der die passende xHamster-Suchseite extern öffnet. Es liest keine xHamster-Suchergebnisse aus, lädt keine Videos herunter und stellt keine Videostreams bereit. Es ist daher kein integrierter Video-Katalog und keine Wiedergabe innerhalb von Nuvio.
+
+Füge die Manifest-URL in Nuvio über die Funktion zum Hinzufügen eines externen/Stremio-kompatiblen Addons ein, sofern deine Nuvio-Version diese unterstützt. Das normale **Add Repository** oben ist dagegen das Repository für Nuvio-Plugins und nicht die URL dieses separaten Addons.
 
 ## Wichtige technische Grenzen
 
