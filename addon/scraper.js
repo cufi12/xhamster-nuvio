@@ -205,7 +205,9 @@ async function catalog(args = {}) {
     // Use xHamster's own "Full Movie" filter, not keyword guesses.
     items = await runActor({ ...input, category: "full-movie", sort: "relevance" });
     items = items.filter(item => isPlayableFullEntry(item, 1200) && !matchesAnime(item));
-
+  } else {
+    items = await runActor(input);
+  }
   if (args.id === "xh_anime_german_dub") items = items.filter(item => matchesAnime(item) && isPlayableFullEntry(item, 600));
   if (args.id === "xh_german_studios") items = items.filter(matchesGermanStudio);
   const metas = items.map(item => {
