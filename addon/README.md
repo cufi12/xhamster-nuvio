@@ -1,6 +1,6 @@
 # CVN Multi-Plattform-Katalog (Addon)
 
-Eigenständiges Stremio-kompatibles Addon für Nuvio.
+Eigenständiges Stremio-kompatibles Addon für Nuvio. Der HTTP-Server verwendet ausschließlich die integrierten Node.js-Module; es gibt keine Laufzeit-Abhängigkeiten von npm-Paketen.
 
 ## Live-Betrieb
 
@@ -26,7 +26,7 @@ Voraussetzung: Node.js 20 oder neuer.
 
 ```sh
 cd addon
-npm install
+npm ci
 npm test
 npm start
 ```
