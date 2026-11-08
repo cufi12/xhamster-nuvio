@@ -60,6 +60,15 @@ function directMediaCandidates(item) {
   });
 }
 
+function previewCandidates(item) {
+  return [...new Set(["trailerUrl", "previewUrl", "trailer", "preview"]
+    .map(key => asText(item?.[key]))
+    .filter(value => {
+      try { return ["http:", "https:"].includes(new URL(value).protocol); }
+      catch { return false; }
+    }))];
+}
+
 function normalize(item) {
   const title = asText(first(item, ["title", "name", "videoTitle"])) || "Untitled video";
   const pageUrl = pageUrlOf(item);
@@ -73,7 +82,7 @@ function normalize(item) {
     (typeof tagsValue === "string" ? tagsValue.split(/[,|]/).map(s => s.trim()).filter(Boolean) : []);
   const views = first(item, ["views", "viewCount"]);
   const date = asText(first(item, ["publishedAt", "uploadDate", "date", "createdAt"]));
-  return { title, pageUrl, poster, description, duration, creator, channel, tags, views, date, mediaCandidates: directMediaCandidates(item) };
+  return { title, pageUrl, poster, description, duration, creator, channel, tags, views, date, mediaCandidates: directMediaCandidates(item), previewCandidates: previewCandidates(item) };
 }
 
 function encodeId(item) {
@@ -226,18 +235,30 @@ async function verifyMediaUrl(candidate) {
 
 async function streams(id) {
   const video = await getVideo(id);
-  if (!video || !Array.isArray(video.mediaCandidates)) return { streams: [] };
+  if (!video) return { streams: [] };
   const verified = [];
-  for (const candidate of video.mediaCandidates.slice(0, 4)) {
+  for (const candidate of (video.mediaCandidates || []).slice(0, 4)) {
     const url = await verifyMediaUrl(candidate);
     if (url && !verified.includes(url)) verified.push(url);
   }
+  const previewStreams = [];
+  for (const candidate of (video.previewCandidates || []).slice(0, 2)) {
+    const url = await verifyMediaUrl(candidate);
+    if (url && !verified.includes(url) && !previewStreams.includes(url)) previewStreams.push(url);
+  }
   return {
-    streams: verified.map((url, index) => ({
-      name: "Apify verified direct media",
-      title: video.title + (verified.length > 1 ? " · Quelle " + (index + 1) : ""),
-      url
-    }))
+    streams: [
+      ...verified.map((url, index) => ({
+        name: "Apify verified direct media",
+        title: video.title + (verified.length > 1 ? " · Quelle " + (index + 1) : ""),
+        url
+      })),
+      ...previewStreams.map((url, index) => ({
+        name: "Vorschau · kein vollständiges Video",
+        title: video.title + " · Vorschau" + (previewStreams.length > 1 ? " " + (index + 1) : ""),
+        url
+      }))
+    ]
   };
 }
 
