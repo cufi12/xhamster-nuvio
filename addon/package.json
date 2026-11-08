@@ -6,7 +6,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "check": "node --check server.js && node --check scraper.js && node --check test.js",
+    "check": "node --check server.js && node --check scraper.js && node --check ixxx.js && node --check test.js",
     "test": "node test.js"
   },
   "engines": {
