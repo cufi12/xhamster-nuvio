@@ -1,5 +1,6 @@
 const assert = require("node:assert/strict");
 const scraper = require("./scraper");
+const ixxx = require("./ixxx");
 
 (async () => {
   const savedToken = process.env.APIFY_TOKEN;
@@ -62,28 +63,57 @@ const scraper = require("./scraper");
     if (savedToken !== undefined) process.env.APIFY_TOKEN = savedToken;
   }
 
+  assert.equal(ixxx.MIN_FEATURE_SECONDS, 5400);
+  assert.equal(ixxx.durationSeconds("1:30:00"), 5400);
+  assert.equal(ixxx.durationSeconds("1:29:59"), 5399);
+  assert.equal(ixxx.durationSeconds("55:59"), 3359);
 
-  const tps = require("./tubepornstars");
-  assert.equal(tps.MIN_SECONDS, 5400);
-  assert.equal(tps.durationSeconds("1:30:00"), 5400);
-  assert.equal(tps.durationSeconds("1:29:59"), 5399);
-  const tpsCards = tps.parseCards(`
-    <div class="card sub group" data-public-id="movie90">
-      <a class="item-title item-link" title="German Dub Feature (1995)"></a>
-      <span class="badge">1:30:00</span>
-      <img src="https://cdn.example/poster.jpg">
+  const cards = ixxx.parseCards(`
+    <div class="card sub group relative" data-public-id="id90">
+      <a class="item-link" href="/out/?l=first"><img src="https://c4.ttcache.com/poster.jpg"><span class="badge">1:30:00</span></a>
+      <a class="item-title item-link" href="/out/?l=first" title="Angle - Provocation (2004) (German Dubbed)"></a>
+      <a class="item-source" href="/source/eporner">Eporner</a>
     </div>
-    <div class="card sub group" data-public-id="short">
-      <a class="item-title item-link" title="German Dub Short"></a>
-      <span class="badge">1:29:59</span>
+    <div class="card sub group relative" data-public-id="short">
+      <a class="item-link" href="/out/?l=short"><span class="badge">1:29:59</span></a>
+      <a class="item-title item-link" href="/out/?l=short" title="German Dub short film"></a>
     </div>
-    <div class="card sub group" data-public-id="clip">
-      <a class="item-title item-link" title="German Dub Trailer"></a>
-      <span class="badge">2:00:00</span>
+    <div class="card sub group relative" data-public-id="clip">
+      <a class="item-link" href="/out/?l=clip"><span class="badge">2:00:00</span></a>
+      <a class="item-title item-link" href="/out/?l=clip" title="German Dub trailer"></a>
     </div>`);
-  assert.equal(tpsCards.length, 1);
-  assert.equal(tpsCards[0].publicId, "movie90");
-\n  console.log("xHamster and TubePornstars catalog contract tests passed.");
+  assert.equal(cards.length, 3);
+  assert.equal(cards[0].publicId, "id90");
+  assert.equal(cards[0].seconds, 5400);
+  assert.equal(cards[0].sourceName, "Eporner");
+  assert.equal(cards[0].outUrl, "https://www.ixxx.com/out/?l=first");
+
+  const germanMovies = ixxx.filterItems(cards, "german-movies");
+  assert.equal(germanMovies.length, 1);
+  assert.equal(germanMovies[0].publicId, "id90");
+
+  const anime = ixxx.filterItems([
+    { publicId: "anime", title: "German Dubbed Hentai Anime Movie", seconds: 3359 }
+  ], "anime");
+  assert.equal(anime.length, 1);
+
+  const studios = ixxx.filterItems([
+    { publicId: "magma", title: "Full Magma Film: Das Spiel 3", seconds: 5600 },
+    { publicId: "mmv", title: "MMV Films Feature Movie", seconds: 6000 },
+    { publicId: "other", title: "Other Studio Full Movie", seconds: 7000 },
+    { publicId: "short-magma", title: "Magma Film Clip", seconds: 6000 }
+  ], "magma");
+  assert.equal(studios.length, 1);
+  assert.equal(studios[0].publicId, "magma");
+
+  const mmv = ixxx.filterItems([
+    { publicId: "mmv", title: "MMV Films Feature Movie", seconds: 6000 },
+    { publicId: "other", title: "Other Studio Feature Movie", seconds: 7000 }
+  ], "mmv");
+  assert.equal(mmv.length, 1);
+  assert.equal(mmv[0].publicId, "mmv");
+
+  console.log("xHamster legacy and iXXX catalog contract tests passed.");
 })().catch(error => {
   console.error(error);
   process.exitCode = 1;
