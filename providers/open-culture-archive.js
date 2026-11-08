@@ -18,10 +18,6 @@ async function json(url) {
 async function tmdbTitle(tmdbId, mediaType, season, episode, apiKey) {
   let path;
   if (mediaType === "movie") path = "/movie/" + encodeURIComponent(String(tmdbId));
-  else if (mediaType === "tv" && season != null && episode != null) {
-    path = "/tv/" + encodeURIComponent(String(tmdbId)) + "/season/" +
-      encodeURIComponent(String(season)) + "/episode/" + encodeURIComponent(String(episode));
-  } else if (mediaType === "tv") path = "/tv/" + encodeURIComponent(String(tmdbId));
   else return "";
   const data = await json("https://api.themoviedb.org/3" + path +
     "?api_key=" + encodeURIComponent(apiKey) + "&language=en-US");
