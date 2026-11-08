@@ -169,20 +169,20 @@ function matchesAnime(item) {
   return /\b(anime|hentai|japanese\s*animation)\b/i.test(searchableMetadata(item));
 }
 
-function isPlayableFullEntry(item, minimumSeconds = 600) {
+function isPlayableFullEntry(item, minimumSeconds = 4800, maximumSeconds = 7200) {
   const type = asText(item?.videoType).toLowerCase();
   const title = asText(item?.title).toLowerCase();
   const duration = Number(first(item, ["durationSeconds", "duration"]));
   if (type && !["video", "full", "movie"].includes(type)) return false;
   if (/\b(preview|trailer|teaser|clip|excerpt|vorschau|ausschnitt|szene)\b/i.test(title)) return false;
-  return Number.isFinite(duration) && duration >= minimumSeconds;
+  return Number.isFinite(duration) && duration >= minimumSeconds && duration <= maximumSeconds;
 }
 
 function matchesGermanStudio(item) {
   const studioFields = [item?.studio, item?.channel, item?.channelName, item?.channels]
     .flatMap(value => Array.isArray(value) ? value : [value])
-    .map(asText).join(" ").toLowerCase();
-  return /\b(german|deutsch|germany|deutschland)\b/i.test(studioFields);
+    .map(asText).join(" ");
+  return /\b(magma|mmv)\b/i.test(studioFields);
 }
 
 async function catalog(args = {}) {
@@ -204,12 +204,12 @@ async function catalog(args = {}) {
   if (args.id === "xh_films_german_dub") {
     // Use xHamster's own "Full Movie" filter, not keyword guesses.
     items = await runActor({ ...input, category: "full-movie", sort: "relevance" });
-    items = items.filter(item => isPlayableFullEntry(item, 1200) && !matchesAnime(item));
+    items = items.filter(item => isPlayableFullEntry(item, 4800, 7200) && matchesGermanDub(item) && !matchesAnime(item));
   } else {
     items = await runActor(input);
   }
-  if (args.id === "xh_anime_german_dub") items = items.filter(item => matchesAnime(item) && isPlayableFullEntry(item, 600));
-  if (args.id === "xh_german_studios") items = items.filter(matchesGermanStudio);
+  if (args.id === "xh_anime_german_dub") items = items.filter(item => matchesAnime(item) && matchesGermanDub(item));
+  if (args.id === "xh_german_studios") items = items.filter(item => matchesGermanStudio(item) && isPlayableFullEntry(item, 5400, 7200));
   const metas = items.map(item => {
     const video = normalize(item);
     if (!video.title || !video.pageUrl) return null;
@@ -321,4 +321,4 @@ async function streams(id) {
   };
 }
 
-module.exports = { catalog, metadata, streams, normalize, encodeId, decodeId, actorInput, directMediaCandidates, verifyMediaUrl };
+module.exports = { catalog, metadata, streams, normalize, encodeId, decodeId, actorInput, directMediaCandidates, verifyMediaUrl, matchesGermanDub, matchesAnime, isPlayableFullEntry, matchesGermanStudio };
