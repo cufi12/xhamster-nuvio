@@ -1,33 +1,30 @@
 # CVN Gratis-Katalog für Nuvio
 
-## Wichtig: zwei verschiedene Nuvio-Bereiche
+## Nuvio-Plugins
 
-Für das Ziel **xHamster direkt durchsuchen und Videos aus dem Katalog auswählen** brauchst du das eigenständige Addon, nicht nur das Nuvio-Plugin.
-
-### xHamster-Katalog (Addons)
-
-Installations-URL für Nuvio unter **Addons**:
-
-https://cvn-xhamster-catalog.onrender.com/manifest.json
-
-Das Addon stellt einen xHamster-Startkatalog sowie einen eigenen Suchkatalog bereit. Es wird auf Render betrieben.
-
-### Nuvio-Provider-Repository (Plugins)
-
-Manifest-URL:
+Repository-URL für Nuvio unter **Einstellungen → Content & Discovery → Plugins → Add Repository**:
 
 https://raw.githubusercontent.com/cufi12/xhamster-nuvio/add-xhamster-provider/manifest.json
 
-Der darin enthaltene xHamster-Provider ist ein separater, titelbezogener Stream-Provider: Nuvio übergibt dafür eine TMDB-ID. Er ist **nicht** der eigenständige xHamster-Suchkatalog.
+Aktivierte Provider:
+- **xHamster** – bestehender Such-Provider über den verbundenen Apify-Dienst.
+- **CVN · Open Culture Archive** – sucht im Internet Archive nach Filmdateien, deren Metadaten ausdrücklich eine Creative-Commons- oder Public-Domain-Lizenz nennen.
 
-## Grenzen und Wiedergabe
+Der Open-Culture-Provider benötigt einen TMDB API Key in seinen Provider-Einstellungen. Er gibt höchstens drei passende Archivtreffer zurück und prüft vor der Ausgabe die Lizenzmetadaten sowie das Dateiformat. Die Archivsuche kann trotzdem unpassende oder nicht abspielbare Treffer liefern; eine Lizenzangabe in Archivmetadaten ist keine unabhängige Rechtsberatung.
 
-- Der Katalog zeigt nur Einträge, die der verbundenen Apify-Suche entnommen werden können.
-- Ein sichtbarer Katalogeintrag bedeutet nicht automatisch, dass ein Video in Nuvios Player abspielbar ist.
-- Es werden nur öffentlich erreichbare, direkt freigegebene Medienquellen berücksichtigt, die einen begrenzten Medientyp-Test bestehen.
-- Keine Umgehung von Logins, Altersprüfungen, CAPTCHAs, DRM, Paywalls oder Anti-Bot-Schutz.
-- Technische Erreichbarkeit ist kein Nachweis für Verbreitungsrechte. Bitte nur Inhalte nutzen, für die du zur Wiedergabe berechtigt bist.
+## Separates xHamster-Katalog-Addon
 
-## Weitere geplante Kategorien
+Für das Durchsuchen des xHamster-Katalogs brauchst du zusätzlich das eigenständige Addon:
 
-Deutsche Studios, German Dub und Hentai German Dub bleiben deaktiviert, bis autorisierte Quellen und die Wiedergabe technisch geprüft sind.
+https://cvn-xhamster-catalog.onrender.com/manifest.json
+
+Dieses wird im Bereich **Addons** installiert, nicht unter Plugins.
+
+## Wichtige technische Grenzen
+
+- Nuvio-Plugins liefern Stream-Kandidaten für ausgewählte Filme oder Serien. Sie erstellen keine Live-TV-Kanäle oder eigenen Katalogseiten.
+- Live-TV und unabhängige Kataloge benötigen ein separates Stremio-kompatibles Addon.
+- Der Open-Culture-Provider ist kein Ersatz für aktuelle Kinofilme, kommerzielle Serien oder einen vollständigen Anime-Katalog.
+- Deutsche Studios, German Dub und Hentai German Dub bleiben deaktiviert, bis autorisierte Quellen, Sprachfassung und Wiedergabe zuverlässig geprüft sind.
+- Es werden keine Logins, Altersprüfungen, CAPTCHAs, DRM, Paywalls oder Anti-Bot-Schutz umgangen.
+- Bitte nutze Inhalte nur im Rahmen der jeweiligen Lizenz und der geltenden Gesetze.
