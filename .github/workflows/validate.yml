@@ -15,7 +15,10 @@ jobs:
         with:
           node-version: 20
       - name: Check provider JavaScript syntax
-        run: node --check providers/xhamster.js
+        run: |
+          for file in providers/*.js; do
+            node --check "$file"
+          done
       - name: Check catalog addon syntax
         run: cd addon && npm install --ignore-scripts && npm run check && npm test
       - name: Validate manifest and provider contract
